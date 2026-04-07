@@ -23,5 +23,8 @@ if REQUIRE_TESTNET and ENVIRONMENT != "testnet":
 IS_TESTNET = True if REQUIRE_TESTNET else (ENVIRONMENT == "testnet")
 ACTIVE_CHAIN_ID = CHAIN_ID_TESTNET if IS_TESTNET else CHAIN_ID_MAINNET
 
+# Protocol Settings
+PROTOCOL_FEE_PERCENT = 0.1  # Fixed server-side; not user-configurable
+
 # App Constraints
 SUPPORTED_TOKENS = ["USDC", "USDT", "ETH", "OKB", "BTC", "WETH"]
