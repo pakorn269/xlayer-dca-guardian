@@ -2,6 +2,8 @@
 
 An autonomous, AI-powered Dollar-Cost Averaging (DCA) agent built for the **OKX Build X Hackathon (Agent Track - X Layer Arena)**. 
 
+**📺 [Watch our 2-Minute Video Pitch & Demo here!](https://www.loom.com/share/68982a26d4f847e1b49f268021808970)**
+
 XLayer DCA Guardian is a secure, local-first Python application that utilizes Natural Language Processing (NLP) to set up advanced DCA strategies on the X Layer network. It features full X-Layer Testnet & Mainnet execution capabilities, a dynamic TEE (Trusted Execution Environment) wallet integration via OKX OnchainOS, and a gamified "Economy Loop" for protocol fee accumulation.
 
 ## 🌟 Key Features
