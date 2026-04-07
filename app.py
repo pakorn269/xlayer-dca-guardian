@@ -7,6 +7,12 @@ from simulator import DCASimulator, TOKEN_ADDRESSES
 from onchain_utils import check_wallet_status, execute_swap, collect_fee, get_treasury, get_wallet_balance_usd
 from config import IS_TESTNET, ACTIVE_CHAIN_ID, REQUIRE_TESTNET, PROTOCOL_FEE_PERCENT
 
+# ⚡ Bolt Optimization: Cache the synchronous CLI subprocess call to avoid blocking
+# the main thread during Streamlit's frequent UI reruns.
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_get_wallet_balance(cid):
+    return get_wallet_balance_usd(cid)
+
 st.set_page_config(
     page_title="XLayer DCA Guardian",
     page_icon="🛡️",
@@ -78,8 +84,8 @@ if not st.session_state.wallet_verified:
 if st.session_state.wallet_verified:
     st.sidebar.success("✅ Wallet Connected (TEE Enabled)")
     
-    st.sidebar.markdown(f"🔹 **Testnet Portfolio:** ${get_wallet_balance_usd(195)} (est.)")
-    st.sidebar.markdown(f"🔸 **Mainnet Portfolio:** ${get_wallet_balance_usd(196)}")
+    st.sidebar.markdown(f"🔹 **Testnet Portfolio:** ${cached_get_wallet_balance(195)} (est.)")
+    st.sidebar.markdown(f"🔸 **Mainnet Portfolio:** ${cached_get_wallet_balance(196)}")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("💸 Economy Loop")
