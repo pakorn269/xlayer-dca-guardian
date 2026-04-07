@@ -49,10 +49,15 @@ is_testnet = st.sidebar.radio(
 ) == "X Layer Testnet (195)"
 
 chain_id = ACTIVE_CHAIN_ID
-if is_testnet:
+# Security: REQUIRE_TESTNET must override any UI selection to prevent accidental mainnet swaps.
+# Without this guard, a user selecting "Mainnet" in the sidebar would bypass the safe-mode flag
+# and execute real on-chain transactions with real funds.
+if REQUIRE_TESTNET:
     chain_id = 195
-    if REQUIRE_TESTNET:
-        st.sidebar.info("🛡️ Defaulted to Testnet via Safe Mode.")
+    is_testnet = True
+    st.sidebar.info("🛡️ Safe Mode ACTIVE (REQUIRE_TESTNET=true). Mainnet is locked out.")
+elif is_testnet:
+    chain_id = 195
 else:
     chain_id = 196
     st.sidebar.error("⚠️ WARNING: You are operating on MAINNET! Real funds will be used.")
@@ -108,9 +113,14 @@ with tab1:
     preset_sel = st.selectbox("✨ Ready-made Strategy Prompts:", ["✏️ Custom (Type below)"] + presets)
     
     default_text = preset_sel if preset_sel != "✏️ Custom (Type below)" else presets[0]
-    query = st.text_area("Strategy Prompt:", default_text, height=68)
+    query = st.text_area(
+        "Strategy Prompt:", 
+        default_text, 
+        height=68,
+        help="Describe your DCA strategy in plain English. e.g. 'Buy 50 USDC of ETH every 7 days for 1 month'"
+    )
     
-    if st.button("✨ Parse Neural Prompt", type="primary"):
+    if st.button("✨ Parse Neural Prompt", type="primary", use_container_width=True):
         with st.spinner("Calling Local LLM/NLP Pipeline..."):
             result = parse_nl_query_local(query)
 
@@ -130,14 +140,14 @@ with tab2:
     
     col1, col2 = st.columns(2)
     with col1:
-        mi_token_in = st.selectbox("Funding Token (Token In)", tokens, index=tokens.index("USDC"))
-        mi_token_out = st.selectbox("Asset (Token Out)", tokens, index=tokens.index("ETH"))
+        mi_token_in = st.selectbox("Funding Token (Token In)", tokens, index=tokens.index("USDC"), help="The stablecoin or token you are spending")
+        mi_token_out = st.selectbox("Asset (Token Out)", tokens, index=tokens.index("ETH"), help="The target asset you want to accumulate")
     with col2:
-        mi_amount = st.number_input("Amount per Interval", min_value=1.0, value=50.0)
-        mi_interval = st.number_input("Interval (Days)", min_value=1, value=7)
-        mi_duration = st.number_input("Duration (Days)", min_value=1, value=30)
+        mi_amount = st.number_input("Amount per Interval", min_value=1.0, value=50.0, help="Amount of funding token to spend per trade")
+        mi_interval = st.number_input("Interval (Days)", min_value=1, value=7, help="Wait time in days between each purchase")
+        mi_duration = st.number_input("Duration (Days)", min_value=1, value=30, help="Total length of the strategy in days")
         
-    if st.button("Set Manual Strategy"):
+    if st.button("Set Manual Strategy", type="primary", use_container_width=True):
         st.session_state.dca_params = {
             "token_in": mi_token_in,
             "token_out": mi_token_out,
