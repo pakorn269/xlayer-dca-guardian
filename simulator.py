@@ -3,7 +3,7 @@ import math
 import random
 import os
 import matplotlib.pyplot as plt
-from typing import List, Dict
+from typing import List
 
 # Expanded Official X Layer Master Addresses
 TOKEN_ADDRESSES = {
