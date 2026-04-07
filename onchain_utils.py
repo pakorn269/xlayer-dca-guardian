@@ -26,12 +26,13 @@ def save_treasury(data):
     with open(TREASURY_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
-def collect_fee(amount: float, currency: str, fee_percent: float = 0.1, is_testnet: bool = False):
+def collect_fee(amount: float, currency: str, is_testnet: bool = False):
     """
     Economy Loop: Collects configured protocol fee upon successful swap execution.
     Logs it to local treasury.json file.
     """
-    fee = amount * (fee_percent / 100.0)
+    from config import PROTOCOL_FEE_PERCENT
+    fee = amount * (PROTOCOL_FEE_PERCENT / 100.0)
     data = get_treasury()
     data["balance"] += fee
     data["currency"] = currency
@@ -50,6 +51,9 @@ def get_historical_kline(token_address: str, chain_id: int):
     """
     Fetches historical k-line prices via okx-dex-market using dynamic chain_id.
     """
+    if not is_safe_arg(str(token_address)):
+        print(f"[!] Warning: Invalid token_address argument detected.")
+        return None
     command = [
         "onchainos", "market", "kline",
         "--chain", str(chain_id),
@@ -77,6 +81,10 @@ def get_swap_quote(token_in: str, token_out: str, amount: str, chain_id: int):
     """
     Calls 'onchainos swap quote' to estimate output tokens and gas with dynamic chain_id.
     """
+    if not all(is_safe_arg(str(x)) for x in [token_in, token_out, amount]):
+        print(f"\n[Error] Failed getting swap quote:\nInvalid input arguments detected")
+        return 0.0, 0.0001, "Invalid input arguments detected"
+
     from config import CHAIN_ID_TESTNET
     net = "Testnet" if chain_id == CHAIN_ID_TESTNET else "Mainnet"
     print(f"[*] Getting DEX quote for {amount} {token_in} -> {token_out} on X Layer {net} ...")
