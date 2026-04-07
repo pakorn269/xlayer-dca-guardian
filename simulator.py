@@ -1,4 +1,5 @@
 import random
+import secrets
 import os
 import matplotlib.pyplot as plt
 from typing import List
@@ -55,11 +56,11 @@ class DCASimulator:
                 return interval_prices
                 
         print(f"[-] Generating structural mock data from live anchor (Anchor: {live_price:.2f})")
-        random.seed(42) 
+        secure_rand = secrets.SystemRandom()
         current_price = live_price * 0.95 
         for i in range(total_steps):
             interval_prices.append(current_price)
-            current_price *= 1.0 + random.uniform(-0.06, 0.07)
+            current_price *= 1.0 + secure_rand.uniform(-0.06, 0.07)
         return interval_prices
         
     def render_chart(self, prices: List[float]):
