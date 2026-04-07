@@ -1,5 +1,3 @@
-import time
-import math
 import random
 import os
 import matplotlib.pyplot as plt
