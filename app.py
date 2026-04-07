@@ -109,8 +109,17 @@ with tab1:
     
     if st.button("✨ Parse Neural Prompt", type="primary"):
         with st.spinner("Calling Local LLM/NLP Pipeline..."):
-            st.session_state.dca_params = parse_nl_query_local(query)
-            st.success("Successfully Parsed Intent!")
+            result = parse_nl_query_local(query)
+
+        if "error" in result:
+            st.error(result["error"])
+        else:
+            st.session_state.dca_params = result
+            parser = result.get("parser", "regex")
+            if parser == "ollama":
+                st.success("✓ Parsed via Gemma 4 (Ollama)")
+            else:
+                st.warning("⚠️ Ollama unavailable — used regex parser. Please review the parameters below.")
 
 with tab2:
     st.markdown("### 🎛️ Exact Parameters")
@@ -216,26 +225,31 @@ if st.session_state.dca_params:
     
     with col_sim:
         if st.button("🔮 Run Simulation (Dry-Run)", width="stretch"):
-            with st.spinner("Fetching Historical Market Data & Simulating..."):
-                sim = DCASimulator(
-                    token_in=dca_params["token_in"],
-                    token_out=dca_params["token_out"],
-                    dca_amount=dca_params["amount"],
-                    interval_days=dca_params["interval"],
-                    duration_days=dca_params["duration"],
-                    is_testnet=is_testnet
-                )
-                pnl_perc = sim.run()
-                sim.save_history(pnl_perc)
-                
-                st.session_state.sim_result = {
-                    "total_invested": sim.total_invested,
-                    "gas_estimate": sim.gas_estimate,
-                    "token_in": sim.token_in,
-                    "pnl_perc": pnl_perc,
-                    "csv_data": sim.get_trades_csv(),
-                    "dca_params": dca_params
-                }
+            if dca_params["token_in"] == dca_params["token_out"]:
+                st.error("Token In and Token Out cannot be the same asset.")
+            else:
+                with st.spinner("Fetching Historical Market Data & Simulating..."):
+                    sim = DCASimulator(
+                        token_in=dca_params["token_in"],
+                        token_out=dca_params["token_out"],
+                        dca_amount=dca_params["amount"],
+                        interval_days=dca_params["interval"],
+                        duration_days=dca_params["duration"],
+                        is_testnet=is_testnet
+                    )
+                    pnl_perc = sim.run()
+                    sim.save_history(pnl_perc)
+
+                    st.session_state.sim_result = {
+                        "total_invested": sim.total_invested,
+                        "gas_estimate": sim.gas_estimate,
+                        "avg_cost_final": sim.avg_cost_final,
+                        "token_in": sim.token_in,
+                        "token_out": sim.token_out,
+                        "pnl_perc": pnl_perc,
+                        "csv_data": sim.get_trades_csv(),
+                        "dca_params": dca_params
+                    }
                     
     with col_exec:
         if st.button("⚡ Execute Real On-Chain Swap", type="primary", width="stretch"):
@@ -267,10 +281,11 @@ if st.session_state.dca_params:
         res = st.session_state.sim_result
         st.markdown("---")
         st.subheader("📊 Dry-Run Results")
-        mcol1, mcol2, mcol3 = st.columns(3)
+        mcol1, mcol2, mcol3, mcol4 = st.columns(4)
         mcol1.metric("Total Invested", f"{res['total_invested']:.2f} {res['token_in']}")
         mcol2.metric("Est. Gas", f"{res['gas_estimate']:.5f} OKB")
         mcol3.metric("PNL %", f"{res['pnl_perc']:.2f}%", delta=f"{res['pnl_perc']:.2f}%")
+        mcol4.metric("Avg Cost Basis", f"{res.get('avg_cost_final', 0):.4f} {res['token_in']}/{res.get('token_out', '')}")
         
         st.download_button(
             label="📥 Export Report (CSV)",
