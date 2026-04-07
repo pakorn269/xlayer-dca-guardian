@@ -47,10 +47,7 @@ class DCASimulator:
             real_prices = get_historical_kline(addr, self.chain_id)
             if real_prices and len(real_prices) >= total_steps:
                 print(f"[+] Real market data successfully retrieved!")
-                for i in range(0, len(real_prices), self.interval_days):
-                    interval_prices.append(real_prices[i])
-                    if len(interval_prices) == total_steps:
-                        break
+                interval_prices = real_prices[:total_steps * self.interval_days:self.interval_days]
                 interval_prices[-1] = live_price
                 return interval_prices
                 
