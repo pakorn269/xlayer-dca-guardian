@@ -65,11 +65,28 @@ class DCASimulator:
     def render_chart(self, prices: List[float]):
         """Render a Matplotlib line chart summarizing the strategy."""
         days = [i * self.interval_days for i in range(len(prices))]
-        
+
         plt.figure(figsize=(10, 5))
         plt.plot(days, prices, color='royalblue', label=f'{self.token_out} Price', linewidth=2)
         plt.scatter(days, prices, color='limegreen', s=50, label='DCA Purchase Point', zorder=5)
-        
+
+        if self.avg_cost_final > 0:
+            plt.axhline(
+                y=self.avg_cost_final,
+                color='orange',
+                linestyle='-',
+                linewidth=1.5,
+                label=f'Avg Cost Basis ({self.avg_cost_final:.4f})'
+            )
+        if prices:
+            plt.axhline(
+                y=prices[-1],
+                color='gray',
+                linestyle='--',
+                linewidth=1.5,
+                label=f'Current Price ({prices[-1]:.4f})'
+            )
+
         net_str = "Testnet" if self.is_testnet else "Mainnet"
         plt.title(f"XLayer ({net_str}) Auto-DCA Simulator: {self.token_in} to {self.token_out}\nEvery {self.interval_days} Days")
         plt.xlabel("Days")
@@ -77,7 +94,7 @@ class DCASimulator:
         plt.grid(True, linestyle='--', alpha=0.6)
         plt.legend()
         plt.tight_layout()
-        
+
         out_path = "dca_simulation_chart.png"
         plt.savefig(out_path, dpi=120)
         plt.close()
@@ -152,7 +169,7 @@ class DCASimulator:
         import csv
         import io
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=["day", "price", "amount_in", "amount_out", "gas_okb"])
+        writer = csv.DictWriter(output, fieldnames=["day", "price", "amount_in", "amount_out", "gas_okb", "avg_cost"])
         writer.writeheader()
         for trade in self.trades:
             writer.writerow(trade)
