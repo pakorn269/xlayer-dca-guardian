@@ -1,0 +1,102 @@
+[
+    {
+        "timestamp": "2026-04-07 10:18:15",
+        "token_in": "USDC",
+        "token_out": "ETH",
+        "amount": 50.0,
+        "interval": 7,
+        "duration": 30,
+        "net": "Testnet",
+        "pnl_perc": -5.62
+    },
+    {
+        "timestamp": "2026-04-07 10:21:16",
+        "token_in": "USDC",
+        "token_out": "BTC",
+        "amount": 50.0,
+        "interval": 30,
+        "duration": 30,
+        "net": "Testnet",
+        "pnl_perc": 1.16
+    },
+    {
+        "timestamp": "2026-04-07 10:24:39",
+        "token_in": "USDC",
+        "token_out": "BTC",
+        "amount": 30.0,
+        "interval": 30,
+        "duration": 365,
+        "net": "Testnet",
+        "pnl_perc": -6.44
+    },
+    {
+        "timestamp": "2026-04-07 10:51:34",
+        "token_in": "USDC",
+        "token_out": "BTC",
+        "amount": 30.0,
+        "interval": 30,
+        "duration": 365,
+        "net": "Testnet",
+        "pnl_perc": -6.44
+    },
+    {
+        "timestamp": "2026-04-07 10:55:08",
+        "token_in": "OKB",
+        "token_out": "USDT",
+        "amount": 100.0,
+        "interval": 7,
+        "duration": 180,
+        "net": "Testnet",
+        "pnl_perc": -1.28
+    },
+    {
+        "timestamp": "2026-04-07 11:22:58",
+        "token_in": "OKB",
+        "token_out": "USDT",
+        "amount": 100.0,
+        "interval": 7,
+        "duration": 180,
+        "net": "Testnet",
+        "pnl_perc": -1.28
+    },
+    {
+        "timestamp": "2026-04-07 11:25:54",
+        "token_in": "USDC",
+        "token_out": "BTC",
+        "amount": 30.0,
+        "interval": 30,
+        "duration": 365,
+        "net": "Testnet",
+        "pnl_perc": -6.44
+    },
+    {
+        "timestamp": "2026-04-07 11:27:07",
+        "token_in": "USDC",
+        "token_out": "OKB",
+        "amount": 300.0,
+        "interval": 30,
+        "duration": 1825,
+        "net": "Testnet",
+        "pnl_perc": -4.04
+    },
+    {
+        "timestamp": "2026-04-07 11:27:59",
+        "token_in": "USDT",
+        "token_out": "BTC",
+        "amount": 50.0,
+        "interval": 7,
+        "duration": 120,
+        "net": "Testnet",
+        "pnl_perc": -10.9
+    },
+    {
+        "timestamp": "2026-04-07 11:28:39",
+        "token_in": "USDT",
+        "token_out": "BTC",
+        "amount": 50.0,
+        "interval": 7,
+        "duration": 120,
+        "net": "Testnet",
+        "pnl_perc": -10.9
+    }
+]
