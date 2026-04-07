@@ -81,8 +81,7 @@ def get_swap_quote(token_in: str, token_out: str, amount: str, chain_id: int):
         try:
             data = json.loads(result.stdout)
             estimated_out = data.get("data", {}).get("toTokenAmount", 0)
-            gas_okb = data.get("data", {}).get("estimatedGasOkb", 0.0001)
-            gas_okb = float(gas_okb) if gas_okb else 0.0001
+            gas_okb = float(data.get("data", {}).get("estimatedGasOkb") or 0.0001)
             return float(estimated_out), gas_okb, data
         except json.JSONDecodeError:
             return 0.0, 0.0001, result.stdout
