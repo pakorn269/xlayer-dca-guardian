@@ -6,7 +6,7 @@ import os
 from main import parse_nl_query_local
 from simulator import DCASimulator, TOKEN_ADDRESSES
 from onchain_utils import check_wallet_status, execute_swap, collect_fee, get_treasury, get_wallet_balance_usd
-from config import IS_TESTNET, ACTIVE_CHAIN_ID, REQUIRE_TESTNET
+from config import IS_TESTNET, ACTIVE_CHAIN_ID, REQUIRE_TESTNET, PROTOCOL_FEE_PERCENT
 
 st.set_page_config(
     page_title="XLayer DCA Guardian",
@@ -79,8 +79,7 @@ if st.session_state.wallet_verified:
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("💸 Economy Loop")
-fee_percent = st.sidebar.slider("Treasury Fee (%)", min_value=0.0, max_value=5.0, value=0.1, step=0.1)
-st.sidebar.info(f"The agent collects a {fee_percent}% protocol fee upon successful swap. When Treasury > 5, an NFT is minted!")
+st.sidebar.info(f"The agent collects a {PROTOCOL_FEE_PERCENT}% protocol fee upon successful swap. When Treasury > 5, an NFT is minted!")
 
 treasury = get_treasury()
 if treasury["balance"] == 0.0:
@@ -273,7 +272,7 @@ if st.session_state.dca_params:
                     
                     if success:
                         st.success("✅ Swap Executed & Confirmed!")
-                        collect_fee(amount=dca_params["amount"], currency=dca_params["token_in"], fee_percent=fee_percent, is_testnet=is_testnet)
+                        collect_fee(amount=dca_params["amount"], currency=dca_params["token_in"], is_testnet=is_testnet)
                         st.balloons()
                         with st.expander("Transaction Output Logs (OnchainOS)"):
                             st.code(output)

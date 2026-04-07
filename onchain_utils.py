@@ -1,6 +1,7 @@
 import subprocess
 import json
 import os
+from config import PROTOCOL_FEE_PERCENT
 
 TREASURY_FILE = "treasury.json"
 
@@ -15,12 +16,12 @@ def save_treasury(data):
     with open(TREASURY_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
-def collect_fee(amount: float, currency: str, fee_percent: float = 0.1, is_testnet: bool = False):
+def collect_fee(amount: float, currency: str, is_testnet: bool = False):
     """
     Economy Loop: Collects configured protocol fee upon successful swap execution.
     Logs it to local treasury.json file.
     """
-    fee = amount * (fee_percent / 100.0)
+    fee = amount * (PROTOCOL_FEE_PERCENT / 100.0)
     data = get_treasury()
     data["balance"] += fee
     data["currency"] = currency
