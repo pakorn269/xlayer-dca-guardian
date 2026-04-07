@@ -66,7 +66,8 @@ def get_swap_quote(token_in: str, token_out: str, amount: str, chain_id: int):
     """
     Calls 'onchainos swap quote' to estimate output tokens and gas with dynamic chain_id.
     """
-    net = "Testnet" if chain_id == 195 else "Mainnet"
+    from config import CHAIN_ID_TESTNET
+    net = "Testnet" if chain_id == CHAIN_ID_TESTNET else "Mainnet"
     print(f"[*] Getting DEX quote for {amount} {token_in} -> {token_out} on X Layer {net} ...")
     command = [
         "onchainos", "swap", "quote",
@@ -92,11 +93,12 @@ def execute_swap(token_in: str, token_out: str, max_amount_in: str, chain_id: in
     """
     Executes a real DEX swap with dynamic chain_id.
     """
-    net = "TESTNET (Chain 195) - No real money used" if chain_id == 195 else "MAINNET (Chain 196)"
+    from config import CHAIN_ID_TESTNET
+    net = "TESTNET_SAFE_MODE - No real money used" if chain_id == CHAIN_ID_TESTNET else "MAINNET (REAL MONEY)"
     print(f"\n[!] INITIATING REAL EXECUTION")
     print(f"Action: Swapping {max_amount_in} {token_in} -> {token_out} on X Layer {net}\n")
     
-    if chain_id == 195:
+    if chain_id == CHAIN_ID_TESTNET:
         import time
         time.sleep(2)
         mock_stdout = "{\n  \"ok\": true,\n  \"data\": {\"txHash\": \"0xmockedtestnettxhash8b1c4a0...\"}\n}"
@@ -146,7 +148,8 @@ def check_wallet_status() -> bool:
 
 def get_wallet_balance_usd(chain_id: int) -> str:
     """Fetch wallet portfolio balance. Mocks Testnet 195 for demo UX since indexer may not cover testnet."""
-    if chain_id == 195:
+    from config import CHAIN_ID_TESTNET
+    if chain_id == CHAIN_ID_TESTNET:
         return "15,000.00"
     try:
         res = subprocess.run(["onchainos", "wallet", "balance", "--chain", str(chain_id)], capture_output=True, text=True)
