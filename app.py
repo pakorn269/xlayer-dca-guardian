@@ -67,7 +67,7 @@ if "wallet_verified" not in st.session_state:
     st.session_state.wallet_verified = check_wallet_status()
 
 if not st.session_state.wallet_verified:
-    if st.sidebar.button("Verify TEE Enclave Status"):
+    if st.sidebar.button("Verify TEE Enclave Status", help="Checks if your TEE wallet is currently authorized via OnchainOS."):
         with st.spinner("Checking OnchainOS Signer..."):
             if check_wallet_status():
                 st.session_state.wallet_verified = True
@@ -118,7 +118,7 @@ with tab1:
         help="Describe your DCA strategy in plain English. e.g. 'Buy 50 USDC of ETH every 7 days for 1 month'"
     )
     
-    if st.button("✨ Parse Neural Prompt", type="primary", use_container_width=True):
+    if st.button("✨ Parse Neural Prompt", type="primary", use_container_width=True, help="Processes your natural language text into executable parameters"):
         with st.spinner("Calling Local LLM/NLP Pipeline..."):
             result = parse_nl_query_local(query)
 
@@ -145,7 +145,7 @@ with tab2:
         mi_interval = st.number_input("Interval (Days)", min_value=1, value=7, help="Wait time in days between each purchase")
         mi_duration = st.number_input("Duration (Days)", min_value=1, value=30, help="Total length of the strategy in days")
         
-    if st.button("Set Manual Strategy", type="primary", use_container_width=True):
+    if st.button("Set Manual Strategy", type="primary", use_container_width=True, help="Saves your manual parameters for simulation or execution"):
         st.session_state.dca_params = {
             "token_in": mi_token_in,
             "token_out": mi_token_out,
@@ -238,7 +238,7 @@ if st.session_state.dca_params:
     col_sim, col_exec = st.columns(2)
     
     with col_sim:
-        if st.button("🔮 Run Simulation (Dry-Run)", width="stretch"):
+        if st.button("🔮 Run Simulation (Dry-Run)", width="stretch", help="Simulates the strategy against historical data without spending funds"):
             if dca_params["token_in"] == dca_params["token_out"]:
                 st.error("Token In and Token Out cannot be the same asset.")
             else:
@@ -266,7 +266,7 @@ if st.session_state.dca_params:
                     }
                     
     with col_exec:
-        if st.button("⚡ Execute Real On-Chain Swap", type="primary", width="stretch"):
+        if st.button("⚡ Execute Real On-Chain Swap", type="primary", width="stretch", help="Signs and executes the transaction on the selected network"):
             if not check_wallet_status():
                 st.error("🚨 Action blocked. Please authorize the TEE wallet via sidebar.")
             else:
