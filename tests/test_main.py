@@ -68,3 +68,13 @@ def test_parser_key_present():
 def test_bnb_token_recognized():
     result = parse_nl_query_local("DCA 50 USDC to BNB every week for 30 days")
     assert result["token_out"] == "BNB"
+
+
+def test_link_token_recognized():
+    result = parse_nl_query_local("DCA 50 USDC to LINK every week for 30 days")
+    assert result["token_out"] == "LINK"
+
+
+def test_wokb_token_recognized():
+    result = parse_nl_query_local("DCA 50 USDC to WOKB every week for 30 days")
+    assert result["token_out"] == "WOKB"

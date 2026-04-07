@@ -13,7 +13,7 @@ try:
 except ImportError:
     pass
 
-SUPPORTED_TOKENS = ["USDC", "USDT", "ETH", "OKB", "BTC", "WETH"]
+SUPPORTED_TOKENS = ["USDC", "USDT", "ETH", "OKB", "BTC", "WETH", "DAI", "LINK", "SOL", "WOKB"]
 
 def interactive_token_menu(prompt="Select Token"):
     print(f"\n[Interactive] {prompt}")
@@ -99,7 +99,7 @@ def parse_nl_query_local(query: str, cli_token_in: str = None, cli_token_out: st
             token_out = buy_with_match.group(1).upper()
             token_in = buy_with_match.group(2).upper()
         else:
-            nlp_tokens = re.findall(r'\b(usdc|usdt|okb|eth|btc|weth|sol|bnb|dai|matic)\b', query_lower)
+            nlp_tokens = re.findall(r'\b(usdc|usdt|okb|eth|btc|weth|sol|bnb|dai|matic|link|wokb)\b', query_lower)
             token_in = nlp_tokens[0].upper() if len(nlp_tokens) > 0 else None
             token_out = nlp_tokens[1].upper() if len(nlp_tokens) > 1 else None
 

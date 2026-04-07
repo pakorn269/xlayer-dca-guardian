@@ -13,7 +13,10 @@ TOKEN_ADDRESSES = {
     "USDT": "0x779Ded0c9e1022225f8E0630b35a9b54bE713736",
     "OKB": "0xe538905cf8410324e03A5A23C1c177a474D59b2b",
     "BTC": "0x1a4b46696b2bb4794eb3d4c26f1c55f9170fa4c5", # WBTC (Bridged layer indicator)
-    "DAI": "0xfe3f56ceb920b72a0bc1afc1ff12bd156ab6e0ba", 
+    "DAI": "0xc5015b9d9161dca7e18e32f6f25c4ad850731fd4", # Dai Stablecoin (verified)
+    "LINK": "0x8af9711b44695a5a081f25ab9903ddb73acf8fa9", # ChainLink Token (verified)
+    "SOL": "0x505000008de8748dbd4422ff4687a4fc9beba15b",  # OKX Wrapped SOL / xSOL (verified)
+    "WOKB": "0x3ea3a4038fba5757a9a68de920b44698d7326a59", # Wrapped OKB - Hot Token (verified)
 }
 
 class DCASimulator:
