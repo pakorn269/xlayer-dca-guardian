@@ -6,6 +6,7 @@ import os
 from main import parse_nl_query_local
 from simulator import DCASimulator, TOKEN_ADDRESSES
 from onchain_utils import check_wallet_status, execute_swap, collect_fee, get_treasury, get_wallet_balance_usd
+from config import IS_TESTNET, ACTIVE_CHAIN_ID, REQUIRE_TESTNET
 
 st.set_page_config(
     page_title="XLayer DCA Guardian",
@@ -13,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS for Premium Hackathon Look
+# Custom CSS for Premium Production Look
 st.markdown("""
     <style>
     .big-font {
@@ -40,8 +41,21 @@ st.markdown("""
 st.sidebar.title("🛡️ DCA Guardian")
 st.sidebar.markdown("AI Auto-Investing Agent for X Layer.")
 
-is_testnet = st.sidebar.radio("🌐 Network Selection:", ("X Layer Testnet (195)", "X Layer Mainnet (196)")) == "X Layer Testnet (195)"
-chain_id = 195 if is_testnet else 196
+# Network Selection - Users can toggle environments
+is_testnet = st.sidebar.radio(
+    "🌐 Network Selection:", 
+    ("X Layer Testnet (195)", "X Layer Mainnet (196)"),
+    index=0 if IS_TESTNET else 1
+) == "X Layer Testnet (195)"
+
+chain_id = ACTIVE_CHAIN_ID
+if is_testnet:
+    chain_id = 195
+    if REQUIRE_TESTNET:
+        st.sidebar.info("🛡️ Defaulted to Testnet via Safe Mode.")
+else:
+    chain_id = 196
+    st.sidebar.error("⚠️ WARNING: You are operating on MAINNET! Real funds will be used.")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🔒 Security & Wallet")
@@ -121,46 +135,70 @@ with tab2:
         }
 
 with tab3:
-    st.markdown("### 💼 Multi-Asset DCA Split & Benchmarking (Preview)")
-    st.markdown("Advanced strategy allowing you to split a single chunk of investment equally across multiple assets and compare performance.")
-    
-    st.markdown("#### ⚖️ Portfolio Split Breakdown")
+    st.markdown("### 💼 Multi-Asset DCA Split")
+    st.markdown("Split a single investment equally across multiple assets and compare normalized performance.")
+
     import pandas as pd
-    
-    split_data = {
-        "Asset": ["BTC", "ETH", "BNB"],
-        "Price (USD)": [69850.00, 3520.00, 605.00],
-        "Amount (USD)": [3.33, 3.33, 3.34],
-        "Units Bought": [0.00004767, 0.00094602, 0.00552066],
-        "Units Cum.": [0.00004767, 0.00094602, 0.00552066],
-        "Cost Basis USD": [3.33, 3.33, 3.34]
-    }
-    
-    df_split = pd.DataFrame(split_data)
-    
-    st.dataframe(df_split.style.format({
-        "Price (USD)": "{:,.2f}",
-        "Amount (USD)": "{:,.2f}",
-        "Units Bought": "{:.8f}",
-        "Units Cum.": "{:.8f}",
-        "Cost Basis USD": "{:,.2f}"
-    }), use_container_width=True)
-    
-    st.markdown("#### 📊 Benchmark Comparison")
-    bcol1, bcol2 = st.columns(2)
-    with bcol1:
-        st.selectbox("Select Benchmark Base:", ["btc_eth_bnb_equal_weight", "top_5_marketcap_crypto", "sp500"])
-    with bcol2:
-        st.selectbox("Compare Against:", ["btc_eth_equal_weight", "btc_maxi", "eth_maxi"])
-        
-    st.info("Comparison calculated! `btc_eth_bnb_equal_weight` outperformed `btc_eth_equal_weight` by **+2.45%** over the selected reference strategy.")
-    
-    import numpy as np
-    mock_chart_data = pd.DataFrame(
-        np.random.randn(50, 2).cumsum(axis=0) + 100,
-        columns=["btc_eth_bnb_equal_weight", "btc_eth_equal_weight"]
-    )
-    st.line_chart(mock_chart_data)
+    available_out_tokens = [t for t in TOKEN_ADDRESSES.keys() if t not in ["USDC", "USDT"]]
+
+    with st.form("portfolio_form"):
+        selected_assets = st.multiselect(
+            "Select Assets to DCA Into (2–5):",
+            options=available_out_tokens,
+            default=["ETH", "BTC"],
+            max_selections=5,
+        )
+        col_pf1, col_pf2 = st.columns(2)
+        with col_pf1:
+            pf_token_in = st.selectbox("Funding Token:", ["USDC", "USDT"])
+            pf_total_amount = st.number_input("Total Amount per Interval", min_value=1.0, value=100.0)
+        with col_pf2:
+            default_interval = st.session_state.dca_params["interval"] if st.session_state.dca_params else 7
+            default_duration = st.session_state.dca_params["duration"] if st.session_state.dca_params else 30
+            pf_interval = st.number_input("Interval (Days)", min_value=1, value=default_interval)
+            pf_duration = st.number_input("Duration (Days)", min_value=1, value=default_duration)
+
+        submit_portfolio = st.form_submit_button("🚀 Run Portfolio Split Simulation")
+
+    if not selected_assets:
+        st.info("Select at least 2 assets to run a portfolio comparison.")
+    elif len(selected_assets) < 2:
+        st.warning("Please select at least 2 assets.")
+    elif submit_portfolio:
+        n = len(selected_assets)
+        amount_per_asset = pf_total_amount / n
+        pf_results = []
+        all_normalized = {}
+
+        with st.spinner(f"Running simulations for {n} assets..."):
+            for asset in selected_assets:
+                pf_sim = DCASimulator(
+                    token_in=pf_token_in,
+                    token_out=asset,
+                    dca_amount=amount_per_asset,
+                    interval_days=int(pf_interval),
+                    duration_days=int(pf_duration),
+                    is_testnet=is_testnet,
+                )
+                pf_pnl = pf_sim.run()
+                pf_results.append({
+                    "Asset": asset,
+                    "Amount Invested": f"{pf_sim.total_invested:.2f} {pf_token_in}",
+                    "Units Accumulated": f"{pf_sim.total_accumulated:.6f}",
+                    "PNL %": f"{pf_pnl:.2f}%",
+                })
+                if pf_sim.prices and pf_sim.prices[0] != 0:
+                    base = pf_sim.prices[0]
+                    all_normalized[asset] = [(p / base) * 100 for p in pf_sim.prices]
+
+        col_table, col_chart = st.columns(2)
+        with col_table:
+            st.markdown("#### ⚖️ Split Results")
+            st.dataframe(pd.DataFrame(pf_results), use_container_width=True)
+        with col_chart:
+            st.markdown("#### 📈 Normalized Returns (Base 100)")
+            if all_normalized:
+                st.line_chart(pd.DataFrame(all_normalized))
 
 if st.session_state.dca_params:
     dca_params = st.session_state.dca_params
@@ -254,7 +292,7 @@ with st.expander("📜 View Simulation History"):
                 hist_data = json.load(f)
                 if hist_data:
                     # Reverse so newest are on top
-                    st.dataframe(list(reversed(hist_data)), use_container_width=True)
+                    st.dataframe(list(reversed(hist_data)), width='stretch')
                 else:
                     st.write("No history found.")
             except:
