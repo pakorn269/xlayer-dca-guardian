@@ -38,12 +38,14 @@ class DCASimulator:
 
     def fetch_historical_prices(self) -> List[float]:
         from onchain_utils import get_historical_kline, get_swap_quote
-        
+
         addr = TOKEN_ADDRESSES.get(self.token_out)
         interval_prices = []
         total_steps = self.duration_days // self.interval_days + 1
-        
-        estimated_out, _, _ = get_swap_quote(self.token_in, self.token_out, str(self.dca_amount), self.chain_id)
+
+        # Perf: capture both estimated_out and est_gas in one subprocess call so
+        # run() can reuse the gas value without a second identical get_swap_quote call.
+        estimated_out, self._cached_gas_estimate, _ = get_swap_quote(self.token_in, self.token_out, str(self.dca_amount), self.chain_id)
         live_price = (self.dca_amount / estimated_out) if estimated_out > 0 else (3000.0 if self.token_out in ['ETH', 'WETH'] else (60000.0 if self.token_out == 'BTC' else 45.0))
         
         if addr:
@@ -104,7 +106,7 @@ class DCASimulator:
         print(f"\n📈 Visual Chart Generated: {os.path.abspath(out_path)}")
 
     def run(self) -> float:
-        from onchain_utils import get_swap_quote, get_treasury
+        from onchain_utils import get_treasury
 
         # Guard: same token in and out is a no-op
         if self.token_in == self.token_out:
@@ -125,7 +127,9 @@ class DCASimulator:
 
         prices = self.fetch_historical_prices()
         self.prices = prices  # exposed for Portfolio Split chart
-        _, est_gas, _ = get_swap_quote(self.token_in, self.token_out, self.dca_amount, self.chain_id)
+        # Reuse gas estimate cached during fetch_historical_prices() — avoids a
+        # duplicate onchainos subprocess call (~1–3 s round-trip per simulation).
+        est_gas = self._cached_gas_estimate
 
         for day_num, price in enumerate(prices):
             tokens_bought = self.dca_amount / price
