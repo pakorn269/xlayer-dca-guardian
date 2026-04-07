@@ -66,7 +66,11 @@ def get_swap_quote(token_in: str, token_out: str, amount: str, chain_id: int):
     """
     Calls 'onchainos swap quote' to estimate output tokens and gas with dynamic chain_id.
     """
-    from config import CHAIN_ID_TESTNET
+    from config import CHAIN_ID_TESTNET, SUPPORTED_TOKENS
+    if token_in.upper() not in SUPPORTED_TOKENS or token_out.upper() not in SUPPORTED_TOKENS:
+        print(f"[!] Security Error: Unsupported token(s) provided. {token_in} or {token_out} is invalid.")
+        return 0.0, 0.0001, None
+
     net = "Testnet" if chain_id == CHAIN_ID_TESTNET else "Mainnet"
     print(f"[*] Getting DEX quote for {amount} {token_in} -> {token_out} on X Layer {net} ...")
     command = [
@@ -93,7 +97,12 @@ def execute_swap(token_in: str, token_out: str, max_amount_in: str, chain_id: in
     """
     Executes a real DEX swap with dynamic chain_id.
     """
-    from config import CHAIN_ID_TESTNET
+    from config import CHAIN_ID_TESTNET, SUPPORTED_TOKENS
+    if token_in.upper() not in SUPPORTED_TOKENS or token_out.upper() not in SUPPORTED_TOKENS:
+        error_msg = f"Security Error: Unsupported token(s) provided. {token_in} or {token_out} is invalid."
+        print(f"\n[Error] {error_msg}")
+        return False, error_msg
+
     net = "TESTNET_SAFE_MODE - No real money used" if chain_id == CHAIN_ID_TESTNET else "MAINNET (REAL MONEY)"
     print(f"\n[!] INITIATING REAL EXECUTION")
     print(f"Action: Swapping {max_amount_in} {token_in} -> {token_out} on X Layer {net}\n")
