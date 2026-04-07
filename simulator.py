@@ -24,11 +24,14 @@ class DCASimulator:
         self.interval_days = interval_days
         self.duration_days = duration_days
         self.is_testnet = is_testnet
-        self.chain_id = 195 if is_testnet else 196
+        from config import CHAIN_ID_TESTNET, CHAIN_ID_MAINNET
+        self.chain_id = CHAIN_ID_TESTNET if is_testnet else CHAIN_ID_MAINNET
         self.trades = []
         self.total_invested = 0.0
         self.total_accumulated = 0.0
-        self.gas_estimate = 0.0 
+        self.gas_estimate = 0.0
+        self.prices = []           # exposed for Portfolio Split chart
+        self.avg_cost_final = 0.0  # exposed after run()
 
     def fetch_historical_prices(self) -> List[float]:
         from onchain_utils import get_historical_kline, get_swap_quote
@@ -82,7 +85,12 @@ class DCASimulator:
 
     def run(self) -> float:
         from onchain_utils import get_swap_quote, get_treasury
-        
+
+        # Guard: same token in and out is a no-op
+        if self.token_in == self.token_out:
+            print(f"[WARN] token_in and token_out are both {self.token_in}. Aborting simulation.")
+            return 0.0
+
         print(f"\n======================================")
         print(f"      DRY-RUN DCA SIMULATION          ")
         print(f"======================================")
@@ -90,29 +98,35 @@ class DCASimulator:
             print(f"[!] RUNNING ON X LAYER TESTNET (195) - Simulated Environment")
         else:
             print(f"[!] RUNNING ON X LAYER MAINNET (196) - Live Environment")
-            
+
         print(f"👉 Selected Pair: {self.token_in} -> {self.token_out}")
         print(f"Strategy  : Buy {self.dca_amount} {self.token_in} of {self.token_out}")
         print(f"Frequency : Every {self.interval_days} days for {self.duration_days} days\n")
-        
+
         prices = self.fetch_historical_prices()
+        self.prices = prices  # exposed for Portfolio Split chart
         _, est_gas, _ = get_swap_quote(self.token_in, self.token_out, self.dca_amount, self.chain_id)
-        
+
         for day_num, price in enumerate(prices):
             tokens_bought = self.dca_amount / price
             gas_cost_okb = est_gas
-            
+
+            self.total_invested += self.dca_amount
+            self.total_accumulated += tokens_bought
+            avg_cost = self.total_invested / self.total_accumulated  # running ACB
+
             self.trades.append({
                 "day": day_num * self.interval_days,
                 "price": price,
                 "amount_in": self.dca_amount,
                 "amount_out": tokens_bought,
-                "gas_okb": gas_cost_okb
+                "gas_okb": gas_cost_okb,
+                "avg_cost": avg_cost,
             })
-            
-            self.total_invested += self.dca_amount
-            self.total_accumulated += tokens_bought
+
             self.gas_estimate += gas_cost_okb
+
+        self.avg_cost_final = self.total_invested / self.total_accumulated if self.total_accumulated else 0.0
 
         current_value = self.total_accumulated * prices[-1]
         pnl = current_value - self.total_invested
