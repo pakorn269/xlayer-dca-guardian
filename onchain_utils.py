@@ -1,8 +1,19 @@
 import subprocess
 import json
+import re
+
 import os
 
 TREASURY_FILE = "treasury.json"
+
+
+def is_safe_arg(arg: str) -> bool:
+    """Validates that an argument is safe from command injection."""
+    if not isinstance(arg, str):
+        return False
+    if arg.startswith('-'):
+        return False
+    return bool(re.match(r'^[a-zA-Z0-9._]+$', arg))
 
 def get_treasury():
     """Reads the current accumulated treasury balance (in token_in units for MVP)."""
@@ -105,6 +116,11 @@ def execute_swap(token_in: str, token_out: str, max_amount_in: str, chain_id: in
         print(mock_stdout)
         print("------------------------\n")
         return True, mock_stdout
+
+
+    if not all(is_safe_arg(str(x)) for x in [token_in, token_out, max_amount_in]):
+        print(f"\n[Error] Failed executing swap:\nInvalid input arguments detected")
+        return False, "Invalid input arguments detected"
 
     wallet_name = "Account 1"
     try:
