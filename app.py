@@ -74,7 +74,7 @@ if not st.session_state.wallet_verified:
 if st.session_state.wallet_verified:
     st.sidebar.success("✅ Wallet Connected (TEE Enabled)")
     
-    st.sidebar.markdown(f"🔹 **Testnet Portfolio:** ${get_wallet_balance_usd(195)}")
+    st.sidebar.markdown(f"🔹 **Testnet Portfolio:** ${get_wallet_balance_usd(195)} (est.)")
     st.sidebar.markdown(f"🔸 **Mainnet Portfolio:** ${get_wallet_balance_usd(196)}")
 
 st.sidebar.markdown("---")
@@ -83,7 +83,10 @@ fee_percent = st.sidebar.slider("Treasury Fee (%)", min_value=0.0, max_value=5.0
 st.sidebar.info(f"The agent collects a {fee_percent}% protocol fee upon successful swap. When Treasury > 5, an NFT is minted!")
 
 treasury = get_treasury()
-st.sidebar.metric(f"Treasury Balance:", f"{treasury['balance']:.4f} {treasury['currency']}")
+if treasury["balance"] == 0.0:
+    st.sidebar.info("No fees collected yet.")
+else:
+    st.sidebar.metric("Treasury Balance:", f"{treasury['balance']:.4f} {treasury['currency']}")
 
 # ----------------- MAIN CONTENT -----------------
 st.markdown('<p class="big-font">🛡️ XLayer DCA Guardian</p>', unsafe_allow_html=True)
@@ -209,6 +212,9 @@ with tab3:
             if all_normalized:
                 st.line_chart(pd.DataFrame(all_normalized))
 
+if not st.session_state.dca_params:
+    st.info("Parse a strategy above to see simulation options.")
+
 if st.session_state.dca_params:
     dca_params = st.session_state.dca_params
     st.markdown("---")
@@ -299,18 +305,18 @@ if st.session_state.dca_params:
             st.image("dca_simulation_chart.png")
 
 st.markdown("---")
-with st.expander("📜 View Simulation History"):
+with st.expander("📜 Past Simulations"):
     import json
     if os.path.exists("simulation_history.json"):
         with open("simulation_history.json", "r") as f:
             try:
                 hist_data = json.load(f)
                 if hist_data:
-                    # Reverse so newest are on top
-                    st.dataframe(list(reversed(hist_data)), width='stretch')
+                    st.caption(f"{len(hist_data)} simulation(s) recorded.")
+                    st.dataframe(list(reversed(hist_data)), use_container_width=True)
                 else:
-                    st.write("No history found.")
-            except:
-                st.write("Error reading history.")
+                    st.info("No simulations run yet.")
+            except Exception:
+                st.error("Error reading simulation history.")
     else:
-        st.write("No simulation history available yet.")
+        st.info("No simulations run yet.")
