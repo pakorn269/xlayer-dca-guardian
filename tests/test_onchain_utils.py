@@ -46,25 +46,27 @@ def test_collect_fee(capsys):
     initial_data = {"balance": 1.0, "currency": "USDC"}
     with patch("onchain_utils.get_treasury", return_value=initial_data):
         with patch("onchain_utils.save_treasury") as mock_save:
-            collect_fee(100.0, "USDC", fee_percent=0.1)
-            # 100 * 0.1 / 100 = 0.1
-            # New balance should be 1.0 + 0.1 = 1.1
-            expected_data = {"balance": 1.1, "currency": "USDC"}
-            mock_save.assert_called_once_with(expected_data)
+            with patch("config.PROTOCOL_FEE_PERCENT", 0.1):
+                collect_fee(100.0, "USDC")
+                # 100 * 0.1 / 100 = 0.1
+                # New balance should be 1.0 + 0.1 = 1.1
+                expected_data = {"balance": 1.1, "currency": "USDC"}
+                mock_save.assert_called_once_with(expected_data)
 
-            captured = capsys.readouterr()
-            assert "Collected 0.1000 USDC fee" in captured.out
-            assert "Treasury balance: 1.1000 USDC" in captured.out
+                captured = capsys.readouterr()
+                assert "Collected 0.1000 USDC fee" in captured.out
+                assert "Treasury balance: 1.1000 USDC" in captured.out
 
 def test_collect_fee_reward_trigger(capsys):
     # Initial balance 4.95, collect 0.1 fee -> 5.05 (triggers reward)
     initial_data = {"balance": 4.95, "currency": "USDC"}
     with patch("onchain_utils.get_treasury", return_value=initial_data):
         with patch("onchain_utils.save_treasury"):
-            collect_fee(100.0, "USDC", fee_percent=0.1)
-            captured = capsys.readouterr()
-            assert "REWARD LOOP TRIGGERED" in captured.out
-            assert "DCA Guardian Badge" in captured.out
+            with patch("config.PROTOCOL_FEE_PERCENT", 0.1):
+                collect_fee(100.0, "USDC")
+                captured = capsys.readouterr()
+                assert "REWARD LOOP TRIGGERED" in captured.out
+                assert "DCA Guardian Badge" in captured.out
 
 # 2. Onchain Interaction Tests
 
