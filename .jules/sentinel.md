@@ -7,3 +7,8 @@
 **Vulnerability:** The `get_swap_quote` and `get_historical_kline` functions in `onchain_utils.py` directly passed user-controlled inputs to `subprocess.run` without validation, exposing the system to Command Argument Injection.
 **Learning:** Passing unsanitized inputs as arguments to a subprocess, even without `shell=True`, can still lead to security risks if the arguments begin with hyphens (interpreted as flags) or contain unintended payload structures.
 **Prevention:** Implement strict validation checks (like `is_safe_arg`) for all user-supplied data before passing it to `subprocess.run`, ensuring it conforms to expected formats and preventing argument injection.
+## 2026-04-08 - Explicit Allowlist Validation for Subprocess Arguments
+
+**Vulnerability:** While basic regex filtering prevented arbitrary character injections, it didn't prevent logically valid but unsupported tokens from being passed to `onchainos` via subprocess calls.
+**Learning:** Defense in depth is required. Relying solely on character format validation is insufficient for command arguments; when possible, inputs should be checked against an explicit allowlist of supported values.
+**Prevention:** For parameters like `token_in` and `token_out`, validate user input against `SUPPORTED_TOKENS` before executing the subprocess to prevent unwanted commands.

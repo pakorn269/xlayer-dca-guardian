@@ -81,11 +81,15 @@ def get_swap_quote(token_in: str, token_out: str, amount: str, chain_id: int):
     """
     Calls 'onchainos swap quote' to estimate output tokens and gas with dynamic chain_id.
     """
+    from config import CHAIN_ID_TESTNET, SUPPORTED_TOKENS
     if not all(is_safe_arg(str(x)) for x in [token_in, token_out, amount]):
         print(f"\n[Error] Failed getting swap quote:\nInvalid input arguments detected")
         return 0.0, 0.0001, "Invalid input arguments detected"
 
-    from config import CHAIN_ID_TESTNET
+    if token_in not in SUPPORTED_TOKENS or token_out not in SUPPORTED_TOKENS:
+        print(f"\n[Error] Failed getting swap quote:\nUnsupported token detected")
+        return 0.0, 0.0001, "Unsupported token detected"
+
     net = "Testnet" if chain_id == CHAIN_ID_TESTNET else "Mainnet"
     print(f"[*] Getting DEX quote for {amount} {token_in} -> {token_out} on X Layer {net} ...")
     command = [
@@ -111,11 +115,19 @@ def execute_swap(token_in: str, token_out: str, max_amount_in: str, chain_id: in
     """
     Executes a real DEX swap with dynamic chain_id.
     """
-    from config import CHAIN_ID_TESTNET
+    from config import CHAIN_ID_TESTNET, SUPPORTED_TOKENS
     net = "TESTNET_SAFE_MODE - No real money used" if chain_id == CHAIN_ID_TESTNET else "MAINNET (REAL MONEY)"
     print(f"\n[!] INITIATING REAL EXECUTION")
     print(f"Action: Swapping {max_amount_in} {token_in} -> {token_out} on X Layer {net}\n")
     
+    if not all(is_safe_arg(str(x)) for x in [token_in, token_out, max_amount_in]):
+        print(f"\n[Error] Failed executing swap:\nInvalid input arguments detected")
+        return False, "Invalid input arguments detected"
+
+    if token_in not in SUPPORTED_TOKENS or token_out not in SUPPORTED_TOKENS:
+        print(f"\n[Error] Failed executing swap:\nUnsupported token detected")
+        return False, "Unsupported token detected"
+
     if chain_id == CHAIN_ID_TESTNET:
         import time
         time.sleep(2)
@@ -124,11 +136,6 @@ def execute_swap(token_in: str, token_out: str, max_amount_in: str, chain_id: in
         print(mock_stdout)
         print("------------------------\n")
         return True, mock_stdout
-
-
-    if not all(is_safe_arg(str(x)) for x in [token_in, token_out, max_amount_in]):
-        print(f"\n[Error] Failed executing swap:\nInvalid input arguments detected")
-        return False, "Invalid input arguments detected"
 
     wallet_name = "Account 1"
     try:

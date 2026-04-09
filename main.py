@@ -4,15 +4,13 @@ import os
 import json
 from simulator import DCASimulator
 from onchain_utils import execute_swap, check_wallet_status, collect_fee
-from config import IS_TESTNET, ACTIVE_CHAIN_ID
+from config import IS_TESTNET, ACTIVE_CHAIN_ID, SUPPORTED_TOKENS
 
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
     pass
-
-SUPPORTED_TOKENS = ["USDC", "USDT", "ETH", "OKB", "BTC", "WETH", "DAI", "LINK", "SOL", "WOKB"]
 
 def interactive_token_menu(prompt="Select Token"):
     print(f"\n[Interactive] {prompt}")

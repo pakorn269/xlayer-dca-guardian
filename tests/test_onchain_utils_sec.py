@@ -33,3 +33,17 @@ def test_execute_swap_validation_blocks_injection():
     success, msg = execute_swap("USDC", "$(whoami)", "50", CHAIN_ID_MAINNET)
     assert success is False
     assert "Invalid input arguments detected" in msg
+
+def test_execute_swap_validation_blocks_unsupported_tokens():
+    # Attempt to swap using a token not in SUPPORTED_TOKENS list
+    token_in = "DOGE"
+    token_out = "ETH"
+    max_amount_in = "50"
+
+    success, msg = execute_swap(token_in, token_out, max_amount_in, CHAIN_ID_MAINNET)
+    assert success is False
+    assert "Unsupported token detected" in msg
+
+    success, msg = execute_swap("USDC", "PEPE", "50", CHAIN_ID_MAINNET)
+    assert success is False
+    assert "Unsupported token detected" in msg

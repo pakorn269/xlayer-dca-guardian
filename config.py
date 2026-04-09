@@ -27,4 +27,4 @@ ACTIVE_CHAIN_ID = CHAIN_ID_TESTNET if IS_TESTNET else CHAIN_ID_MAINNET
 PROTOCOL_FEE_PERCENT = 0.1  # Fixed server-side; not user-configurable
 
 # App Constraints
-SUPPORTED_TOKENS = ["USDC", "USDT", "ETH", "OKB", "BTC", "WETH"]
+SUPPORTED_TOKENS = ["USDC", "USDT", "ETH", "OKB", "BTC", "WETH", "DAI", "LINK", "SOL", "WOKB"]
