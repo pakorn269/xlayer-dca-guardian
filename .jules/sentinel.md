@@ -12,3 +12,8 @@
 **Vulnerability:** While basic regex filtering prevented arbitrary character injections, it didn't prevent logically valid but unsupported tokens from being passed to `onchainos` via subprocess calls.
 **Learning:** Defense in depth is required. Relying solely on character format validation is insufficient for command arguments; when possible, inputs should be checked against an explicit allowlist of supported values.
 **Prevention:** For parameters like `token_in` and `token_out`, validate user input against `SUPPORTED_TOKENS` before executing the subprocess to prevent unwanted commands.
+
+## 2026-04-07 - Information Leakage via Subprocess Exceptions
+**Vulnerability:** The error handlers in `execute_swap` and `get_swap_quote` (`onchain_utils.py`) directly returned CLI output and `stderr` (e.g., `e.stderr` and `result.stdout`) on failure, which were subsequently rendered directly in the Streamlit UI, exposing internal system details, potential stack traces, or command structures to end-users.
+**Learning:** Even if `subprocess` outputs are standard application errors, exposing raw CLI output directly to a web frontend creates an Information Disclosure vulnerability (leaking internals/stack traces) that can aid attackers.
+**Prevention:** Always log detailed external command errors securely on the server console or log file, and return generic, sanitized error messages (e.g., "Swap execution failed on the node. Please check server logs.") to the caller or frontend.

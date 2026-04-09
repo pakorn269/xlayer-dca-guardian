@@ -107,7 +107,8 @@ def get_swap_quote(token_in: str, token_out: str, amount: str, chain_id: int):
             gas_okb = float(data.get("data", {}).get("estimatedGasOkb") or 0.0001)
             return float(estimated_out), gas_okb, data
         except json.JSONDecodeError:
-            return 0.0, 0.0001, result.stdout
+            # 🛡️ Sentinel: Do not leak unparseable CLI stdout to the caller
+            return 0.0, 0.0001, "Invalid quote response received from the node."
     except subprocess.CalledProcessError:
         return 0.0, 0.0001, None
 
@@ -160,7 +161,8 @@ def execute_swap(token_in: str, token_out: str, max_amount_in: str, chain_id: in
         return True, result.stdout
     except subprocess.CalledProcessError as e:
         print(f"\n[Error] Failed executing swap:\n{e.stderr}")
-        return False, e.stderr
+        # 🛡️ Sentinel: Do not leak command line stderr to the UI to prevent stack trace/internal state exposure
+        return False, "Swap execution failed on the node. Please check server logs for details."
 
 def check_wallet_status() -> bool:
     try:
