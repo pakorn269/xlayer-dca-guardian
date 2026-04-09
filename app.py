@@ -244,7 +244,7 @@ if st.session_state.dca_params:
     col_sim, col_exec = st.columns(2)
     
     with col_sim:
-        if st.button("🔮 Run Simulation (Dry-Run)", width="stretch", help="Simulates the strategy against historical data without spending funds"):
+        if st.button("🔮 Run Simulation (Dry-Run)", use_container_width=True, help="Simulates the strategy against historical data without spending funds"):
             if dca_params["token_in"] == dca_params["token_out"]:
                 st.error("Token In and Token Out cannot be the same asset.")
             else:
@@ -272,7 +272,8 @@ if st.session_state.dca_params:
                     }
                     
     with col_exec:
-        if st.button("⚡ Execute Real On-Chain Swap", type="primary", width="stretch", help="Signs and executes the transaction on the selected network"):
+        btn_help = "Signs and executes the transaction on the selected network" if st.session_state.get('wallet_verified', False) else "⚠️ Please authorize the TEE wallet via sidebar to enable execution"
+        if st.button("⚡ Execute Real On-Chain Swap", type="primary", use_container_width=True, help=btn_help, disabled=not st.session_state.get('wallet_verified', False)):
             if not check_wallet_status():
                 st.error("🚨 Action blocked. Please authorize the TEE wallet via sidebar.")
             else:
@@ -312,7 +313,7 @@ if st.session_state.dca_params:
             data=res["csv_data"],
             file_name=f"dca_report_{dca_params['token_in']}_{dca_params['token_out']}.csv",
             mime="text/csv",
-            width="stretch"
+            use_container_width=True
         )
         
         if os.path.exists("dca_simulation_chart.png"):
