@@ -1,7 +1,6 @@
 import random
 import secrets
 import os
-import matplotlib.pyplot as plt
 from typing import List
 
 # Expanded Official X Layer Master Addresses
@@ -65,6 +64,8 @@ class DCASimulator:
         
     def render_chart(self, prices: List[float]):
         """Render a Matplotlib line chart summarizing the strategy."""
+        # ⚡ Bolt Optimization: Lazy load matplotlib to reduce app startup time significantly
+        import matplotlib.pyplot as plt
         days = [i * self.interval_days for i in range(len(prices))]
 
         plt.figure(figsize=(10, 5))
