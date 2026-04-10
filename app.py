@@ -132,7 +132,11 @@ with tab1:
         "DCA 50 USDC to ETH every 7 days for 30 days",
         "Buy OKB with 100 USDT every 1 week for 6 months"
     ]
-    preset_sel = st.selectbox("✨ Ready-made Strategy Prompts:", ["✏️ Custom (Type below)"] + presets)
+    preset_sel = st.selectbox(
+        "✨ Ready-made Strategy Prompts:",
+        ["✏️ Custom (Type below)"] + presets,
+        help="Select a template strategy to auto-fill the prompt area"
+    )
     
     default_text = preset_sel if preset_sel != "✏️ Custom (Type below)" else presets[0]
     query = st.text_area(
@@ -191,6 +195,7 @@ with tab3:
             options=available_out_tokens,
             default=["ETH", "BTC"],
             max_selections=5,
+            help="Choose the assets you want to allocate your funding token towards"
         )
         col_pf1, col_pf2 = st.columns(2)
         with col_pf1:
