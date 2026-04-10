@@ -17,3 +17,8 @@
 **Vulnerability:** The error handlers in `execute_swap` and `get_swap_quote` (`onchain_utils.py`) directly returned CLI output and `stderr` (e.g., `e.stderr` and `result.stdout`) on failure, which were subsequently rendered directly in the Streamlit UI, exposing internal system details, potential stack traces, or command structures to end-users.
 **Learning:** Even if `subprocess` outputs are standard application errors, exposing raw CLI output directly to a web frontend creates an Information Disclosure vulnerability (leaking internals/stack traces) that can aid attackers.
 **Prevention:** Always log detailed external command errors securely on the server console or log file, and return generic, sanitized error messages (e.g., "Swap execution failed on the node. Please check server logs.") to the caller or frontend.
+
+## 2024-05-24 - Prevent Information Disclosure via Error Messages
+**Vulnerability:** Raw exceptions, standard error output (`stderr`), and execution outputs (`stdout`) were being exposed to the caller or printed directly when `subprocess.run` calls failed or JSON decoding failed in `onchain_utils.py` (specifically in `execute_swap`, `get_swap_quote`, and `check_wallet_status`).
+**Learning:** Returning or logging raw system error strings or stack traces exposes sensitive internal context, configuration details, or internal application state, creating an Information Disclosure vulnerability.
+**Prevention:** Always catch explicit exceptions (e.g., `subprocess.CalledProcessError`, `json.JSONDecodeError`) and return or log sanitized, generic error messages to the frontend/callers to prevent internal state leakage.
