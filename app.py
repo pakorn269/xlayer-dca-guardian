@@ -90,7 +90,7 @@ if "wallet_verified" not in st.session_state:
     st.session_state.wallet_verified = check_wallet_status()
 
 if not st.session_state.wallet_verified:
-    if st.sidebar.button("Verify TEE Enclave Status", help="Checks if your TEE wallet is currently authorized via OnchainOS."):
+    if st.sidebar.button("Verify TEE Enclave Status", help="Checks if your TEE wallet is currently authorized via OnchainOS.", use_container_width=True):
         with st.spinner("Checking OnchainOS Signer..."):
             if check_wallet_status():
                 st.session_state.wallet_verified = True
@@ -206,7 +206,7 @@ with tab3:
             pf_interval = st.number_input("Interval (Days)", min_value=1, value=default_interval, help="Wait time in days between each purchase")
             pf_duration = st.number_input("Duration (Days)", min_value=1, value=default_duration, help="Total length of the strategy in days")
 
-        submit_portfolio = st.form_submit_button("🚀 Run Portfolio Split Simulation", help="Simulates the performance of the portfolio split")
+        submit_portfolio = st.form_submit_button("🚀 Run Portfolio Split Simulation", help="Simulates the performance of the portfolio split", use_container_width=True)
 
     if not selected_assets:
         st.info("Select at least 2 assets to run a portfolio comparison.")
