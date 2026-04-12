@@ -13,6 +13,22 @@ from config import IS_TESTNET, ACTIVE_CHAIN_ID, REQUIRE_TESTNET, PROTOCOL_FEE_PE
 def cached_get_wallet_balance(cid):
     return get_wallet_balance_usd(cid)
 
+# ⚡ Bolt Optimization: Cache synchronous disk I/O to avoid blocking on every rerun.
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_get_treasury():
+    return get_treasury()
+
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_load_simulation_history():
+    import json
+    if os.path.exists("simulation_history.json"):
+        try:
+            with open("simulation_history.json", "r") as f:
+                return {"data": json.load(f)}
+        except Exception:
+            return {"error": "Error reading simulation history."}
+    return None
+
 st.set_page_config(
     page_title="XLayer DCA Guardian",
     page_icon="🛡️",
@@ -48,9 +64,10 @@ st.sidebar.markdown("AI Auto-Investing Agent for X Layer.")
 
 # Network Selection - Users can toggle environments
 is_testnet = st.sidebar.radio(
-    "🌐 Network Selection:", 
+    "🌐 Network Selection:",
     ("X Layer Testnet (195)", "X Layer Mainnet (196)"),
-    index=0 if IS_TESTNET else 1
+    index=0 if IS_TESTNET else 1,
+    help="Toggle between X Layer Testnet (simulated) and Mainnet (real funds)"
 ) == "X Layer Testnet (195)"
 
 chain_id = ACTIVE_CHAIN_ID
@@ -91,7 +108,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("💸 Economy Loop")
 st.sidebar.info(f"The agent collects a {PROTOCOL_FEE_PERCENT}% protocol fee upon successful swap. When Treasury > 5, an NFT is minted!")
 
-treasury = get_treasury()
+treasury = cached_get_treasury()
 if treasury["balance"] == 0.0:
     st.sidebar.info("No fees collected yet.")
 else:
@@ -114,7 +131,11 @@ with tab1:
         "DCA 50 USDC to ETH every 7 days for 30 days",
         "Buy OKB with 100 USDT every 1 week for 6 months"
     ]
-    preset_sel = st.selectbox("✨ Ready-made Strategy Prompts:", ["✏️ Custom (Type below)"] + presets)
+    preset_sel = st.selectbox(
+        "✨ Ready-made Strategy Prompts:",
+        ["✏️ Custom (Type below)"] + presets,
+        help="Select a template strategy to auto-fill the prompt area"
+    )
     
     default_text = preset_sel if preset_sel != "✏️ Custom (Type below)" else presets[0]
     query = st.text_area(
@@ -173,18 +194,19 @@ with tab3:
             options=available_out_tokens,
             default=["ETH", "BTC"],
             max_selections=5,
+            help="Choose the assets you want to allocate your funding token towards"
         )
         col_pf1, col_pf2 = st.columns(2)
         with col_pf1:
-            pf_token_in = st.selectbox("Funding Token:", ["USDC", "USDT"])
-            pf_total_amount = st.number_input("Total Amount per Interval", min_value=1.0, value=100.0)
+            pf_token_in = st.selectbox("Funding Token:", ["USDC", "USDT"], help="The token used to buy the selected assets")
+            pf_total_amount = st.number_input("Total Amount per Interval", min_value=1.0, value=100.0, help="Total amount to spend per interval, split evenly across assets")
         with col_pf2:
             default_interval = st.session_state.dca_params["interval"] if st.session_state.dca_params else 7
             default_duration = st.session_state.dca_params["duration"] if st.session_state.dca_params else 30
-            pf_interval = st.number_input("Interval (Days)", min_value=1, value=default_interval)
-            pf_duration = st.number_input("Duration (Days)", min_value=1, value=default_duration)
+            pf_interval = st.number_input("Interval (Days)", min_value=1, value=default_interval, help="Wait time in days between each purchase")
+            pf_duration = st.number_input("Duration (Days)", min_value=1, value=default_duration, help="Total length of the strategy in days")
 
-        submit_portfolio = st.form_submit_button("🚀 Run Portfolio Split Simulation")
+        submit_portfolio = st.form_submit_button("🚀 Run Portfolio Split Simulation", help="Simulates the performance of the portfolio split")
 
     if not selected_assets:
         st.info("Select at least 2 assets to run a portfolio comparison.")
@@ -259,6 +281,7 @@ if st.session_state.dca_params:
                     )
                     pnl_perc = sim.run()
                     sim.save_history(pnl_perc)
+                    cached_load_simulation_history.clear()
 
                     st.session_state.sim_result = {
                         "total_invested": sim.total_invested,
@@ -289,6 +312,7 @@ if st.session_state.dca_params:
                     if success:
                         st.success("✅ Swap Executed & Confirmed!")
                         collect_fee(amount=dca_params["amount"], currency=dca_params["token_in"], is_testnet=is_testnet)
+                        cached_get_treasury.clear()
                         st.balloons()
                         with st.expander("Transaction Output Logs (OnchainOS)"):
                             st.code(output)
@@ -321,17 +345,15 @@ if st.session_state.dca_params:
 
 st.markdown("---")
 with st.expander("📜 Past Simulations"):
-    import json
-    if os.path.exists("simulation_history.json"):
-        with open("simulation_history.json", "r") as f:
-            try:
-                hist_data = json.load(f)
-                if hist_data:
-                    st.caption(f"{len(hist_data)} simulation(s) recorded.")
-                    st.dataframe(list(reversed(hist_data)), use_container_width=True)
-                else:
-                    st.info("No simulations run yet.")
-            except Exception:
-                st.error("Error reading simulation history.")
-    else:
+    hist_result = cached_load_simulation_history()
+    if hist_result is None:
         st.info("No simulations run yet.")
+    elif "error" in hist_result:
+        st.error(hist_result["error"])
+    else:
+        hist_data = hist_result["data"]
+        if hist_data:
+            st.caption(f"{len(hist_data)} simulation(s) recorded.")
+            st.dataframe(list(reversed(hist_data)), use_container_width=True)
+        else:
+            st.info("No simulations run yet.")

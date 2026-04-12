@@ -3,12 +3,21 @@ import matplotlib
 matplotlib.use('Agg')  # non-interactive backend for headless testing
 from unittest.mock import MagicMock
 
-# Patch subprocess so onchainos CLI calls don't run
+# Patch subprocess so onchainos CLI calls don't run (selective: only intercept onchainos)
+import subprocess
+orig_run = subprocess.run
+
 @pytest.fixture(autouse=True)
 def mock_subprocess(monkeypatch):
     mock_result = MagicMock()
     mock_result.stdout = '{"ok": false}'
-    monkeypatch.setattr("subprocess.run", lambda *a, **kw: mock_result)
+
+    def fake_run(cmd, *args, **kwargs):
+        if isinstance(cmd, list) and len(cmd) > 0 and cmd[0] == "onchainos":
+            return mock_result
+        return orig_run(cmd, *args, **kwargs)
+
+    monkeypatch.setattr("subprocess.run", fake_run)
 
 from simulator import DCASimulator
 

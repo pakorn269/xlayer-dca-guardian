@@ -107,7 +107,8 @@ def get_swap_quote(token_in: str, token_out: str, amount: str, chain_id: int):
             gas_okb = float(data.get("data", {}).get("estimatedGasOkb") or 0.0001)
             return float(estimated_out), gas_okb, data
         except json.JSONDecodeError:
-            return 0.0, 0.0001, result.stdout
+            # 🛡️ Sentinel: Do not leak unparseable CLI stdout to prevent internal state exposure
+            return 0.0, 0.0001, "Invalid quote response received from the node."
     except subprocess.CalledProcessError:
         return 0.0, 0.0001, None
 
@@ -159,8 +160,9 @@ def execute_swap(token_in: str, token_out: str, max_amount_in: str, chain_id: in
         print("------------------------\n")
         return True, result.stdout
     except subprocess.CalledProcessError as e:
-        print(f"\n[Error] Failed executing swap:\n{e.stderr}")
-        return False, e.stderr
+        # 🛡️ Sentinel: Do not leak stderr to UI to prevent stack trace/internal state exposure
+        print("\n[Error] Failed executing swap: subprocess error occurred")
+        return False, "Swap execution failed on the node. Please check server logs for details."
 
 def check_wallet_status() -> bool:
     try:
@@ -172,8 +174,8 @@ def check_wallet_status() -> bool:
         else:
             print("[WARN] Wallet not logged in. Please run 'onchainos wallet login'.")
             return False
-    except Exception as e:
-        print(f"[ERROR] Checking wallet failed: {e}")
+    except Exception:
+        print("[ERROR] Checking wallet failed.")
         return False
 
 def get_wallet_balance_usd(chain_id: int) -> str:

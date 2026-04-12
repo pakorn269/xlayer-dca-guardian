@@ -12,3 +12,8 @@
 **Vulnerability:** While basic regex filtering prevented arbitrary character injections, it didn't prevent logically valid but unsupported tokens from being passed to `onchainos` via subprocess calls.
 **Learning:** Defense in depth is required. Relying solely on character format validation is insufficient for command arguments; when possible, inputs should be checked against an explicit allowlist of supported values.
 **Prevention:** For parameters like `token_in` and `token_out`, validate user input against `SUPPORTED_TOKENS` before executing the subprocess to prevent unwanted commands.
+
+## 2026-04-08 - Information Disclosure via Subprocess Error Output
+**Vulnerability:** Raw `stderr` and unparseable `stdout` from subprocess calls in `execute_swap` and `get_swap_quote` were being returned directly to callers and rendered in the Streamlit UI, potentially leaking CLI internals, stack traces, or system paths.
+**Learning:** `CalledProcessError.stderr` and raw `stdout` buffers can contain sensitive execution details. Returning them to a web frontend constitutes an Information Disclosure vulnerability.
+**Prevention:** Catch `CalledProcessError` and `JSONDecodeError` explicitly and return sanitized generic messages (e.g., "Swap execution failed on the node.") to callers. Log full details server-side only.
