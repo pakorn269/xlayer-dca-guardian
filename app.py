@@ -67,7 +67,8 @@ st.sidebar.markdown("AI Auto-Investing Agent for X Layer.")
 is_testnet = st.sidebar.radio(
     "🌐 Network Selection:", 
     ("X Layer Testnet (195)", "X Layer Mainnet (196)"),
-    index=0 if IS_TESTNET else 1
+    index=0 if IS_TESTNET else 1,
+    help="Select the blockchain network to operate on. Testnet uses simulated funds, while Mainnet uses real funds."
 ) == "X Layer Testnet (195)"
 
 chain_id = ACTIVE_CHAIN_ID
@@ -90,7 +91,7 @@ if "wallet_verified" not in st.session_state:
     st.session_state.wallet_verified = check_wallet_status()
 
 if not st.session_state.wallet_verified:
-    if st.sidebar.button("Verify TEE Enclave Status", help="Checks if your TEE wallet is currently authorized via OnchainOS."):
+    if st.sidebar.button("Verify TEE Enclave Status", help="Checks if your TEE wallet is currently authorized via OnchainOS.", use_container_width=True):
         with st.spinner("Checking OnchainOS Signer..."):
             if check_wallet_status():
                 st.session_state.wallet_verified = True
@@ -193,15 +194,15 @@ with tab3:
         )
         col_pf1, col_pf2 = st.columns(2)
         with col_pf1:
-            pf_token_in = st.selectbox("Funding Token:", ["USDC", "USDT"])
-            pf_total_amount = st.number_input("Total Amount per Interval", min_value=1.0, value=100.0)
+            pf_token_in = st.selectbox("Funding Token:", ["USDC", "USDT"], help="The stablecoin you will use to fund the investments.")
+            pf_total_amount = st.number_input("Total Amount per Interval", min_value=1.0, value=100.0, help="The total amount to invest across all selected assets per interval.")
         with col_pf2:
             default_interval = st.session_state.dca_params["interval"] if st.session_state.dca_params else 7
             default_duration = st.session_state.dca_params["duration"] if st.session_state.dca_params else 30
-            pf_interval = st.number_input("Interval (Days)", min_value=1, value=default_interval)
-            pf_duration = st.number_input("Duration (Days)", min_value=1, value=default_duration)
+            pf_interval = st.number_input("Interval (Days)", min_value=1, value=default_interval, help="The number of days between each investment.")
+            pf_duration = st.number_input("Duration (Days)", min_value=1, value=default_duration, help="The total duration of the DCA strategy in days.")
 
-        submit_portfolio = st.form_submit_button("🚀 Run Portfolio Split Simulation")
+        submit_portfolio = st.form_submit_button("🚀 Run Portfolio Split Simulation", use_container_width=True)
 
     if not selected_assets:
         st.info("Select at least 2 assets to run a portfolio comparison.")
