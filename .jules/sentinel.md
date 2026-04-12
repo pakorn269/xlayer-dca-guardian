@@ -22,3 +22,8 @@
 **Vulnerability:** Raw exceptions, standard error output (`stderr`), and execution outputs (`stdout`) were being exposed to the caller or printed directly when `subprocess.run` calls failed or JSON decoding failed in `onchain_utils.py` (specifically in `execute_swap`, `get_swap_quote`, and `check_wallet_status`).
 **Learning:** Returning or logging raw system error strings or stack traces exposes sensitive internal context, configuration details, or internal application state, creating an Information Disclosure vulnerability.
 **Prevention:** Always catch explicit exceptions (e.g., `subprocess.CalledProcessError`, `json.JSONDecodeError`) and return or log sanitized, generic error messages to the frontend/callers to prevent internal state leakage.
+
+## 2024-05-18 - Information Disclosure via Subprocess Output
+**Vulnerability:** Raw `stdout` and `stderr` payloads from `subprocess.run` were being returned directly in error handlers, potentially leaking sensitive execution details, CLI internals, or stack traces to callers (and the frontend UI).
+**Learning:** `subprocess.CalledProcessError.stderr` and unparsed `subprocess.CompletedProcess.stdout` can contain system paths, execution arguments, or debug information that should not be visible to users.
+**Prevention:** Catch specific exceptions (like `subprocess.CalledProcessError` or `json.JSONDecodeError`) and return sanitized, generic error strings instead of passing raw underlying logs.
