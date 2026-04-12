@@ -13,6 +13,23 @@ from config import IS_TESTNET, ACTIVE_CHAIN_ID, REQUIRE_TESTNET, PROTOCOL_FEE_PE
 def cached_get_wallet_balance(cid):
     return get_wallet_balance_usd(cid)
 
+# ⚡ Bolt Optimization: Cache synchronous disk I/O to avoid blocking the main thread
+# on every interaction.
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_get_treasury():
+    return get_treasury()
+
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_load_simulation_history():
+    import json
+    if os.path.exists("simulation_history.json"):
+        try:
+            with open("simulation_history.json", "r") as f:
+                return {"data": json.load(f)}
+        except Exception:
+            return {"error": "Error reading simulation history."}
+    return None
+
 st.set_page_config(
     page_title="XLayer DCA Guardian",
     page_icon="🛡️",
@@ -91,7 +108,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("💸 Economy Loop")
 st.sidebar.info(f"The agent collects a {PROTOCOL_FEE_PERCENT}% protocol fee upon successful swap. When Treasury > 5, an NFT is minted!")
 
-treasury = get_treasury()
+treasury = cached_get_treasury()
 if treasury["balance"] == 0.0:
     st.sidebar.info("No fees collected yet.")
 else:
@@ -259,6 +276,7 @@ if st.session_state.dca_params:
                     )
                     pnl_perc = sim.run()
                     sim.save_history(pnl_perc)
+                    cached_load_simulation_history.clear()
 
                     st.session_state.sim_result = {
                         "total_invested": sim.total_invested,
@@ -289,6 +307,7 @@ if st.session_state.dca_params:
                     if success:
                         st.success("✅ Swap Executed & Confirmed!")
                         collect_fee(amount=dca_params["amount"], currency=dca_params["token_in"], is_testnet=is_testnet)
+                        cached_get_treasury.clear()
                         st.balloons()
                         with st.expander("Transaction Output Logs (OnchainOS)"):
                             st.code(output)
@@ -321,17 +340,15 @@ if st.session_state.dca_params:
 
 st.markdown("---")
 with st.expander("📜 Past Simulations"):
-    import json
-    if os.path.exists("simulation_history.json"):
-        with open("simulation_history.json", "r") as f:
-            try:
-                hist_data = json.load(f)
-                if hist_data:
-                    st.caption(f"{len(hist_data)} simulation(s) recorded.")
-                    st.dataframe(list(reversed(hist_data)), use_container_width=True)
-                else:
-                    st.info("No simulations run yet.")
-            except Exception:
-                st.error("Error reading simulation history.")
-    else:
+    hist_result = cached_load_simulation_history()
+    if hist_result is None:
         st.info("No simulations run yet.")
+    elif "error" in hist_result:
+        st.error(hist_result["error"])
+    else:
+        hist_data = hist_result["data"]
+        if hist_data:
+            st.caption(f"{len(hist_data)} simulation(s) recorded.")
+            st.dataframe(list(reversed(hist_data)), use_container_width=True)
+        else:
+            st.info("No simulations run yet.")
