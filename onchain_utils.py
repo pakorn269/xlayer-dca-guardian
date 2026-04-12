@@ -159,8 +159,8 @@ def execute_swap(token_in: str, token_out: str, max_amount_in: str, chain_id: in
         print(result.stdout)
         print("------------------------\n")
         return True, result.stdout
-    except subprocess.CalledProcessError as e:
-        print(f"\n[Error] Failed executing swap:\n{e.stderr}")
+    except subprocess.CalledProcessError:
+        print("\n[Error] Failed executing swap")
         # 🛡️ Sentinel: Do not leak command line stderr to the UI to prevent stack trace/internal state exposure
         return False, "Swap execution failed on the node. Please check server logs for details."
 
@@ -175,7 +175,7 @@ def check_wallet_status() -> bool:
             print("[WARN] Wallet not logged in. Please run 'onchainos wallet login'.")
             return False
     except Exception as e:
-        print(f"[ERROR] Checking wallet failed: {e}")
+        print("[ERROR] Checking wallet failed.")
         return False
 
 def get_wallet_balance_usd(chain_id: int) -> str:
