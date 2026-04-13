@@ -229,7 +229,10 @@ with tab3:
                     duration_days=int(pf_duration),
                     is_testnet=is_testnet,
                 )
-                pf_pnl = pf_sim.run()
+                # ⚡ Bolt Optimization: Skip expensive Matplotlib chart rendering here
+                # since the Portfolio Split view doesn't display these individual PNGs. This
+                # prevents synchronous main-thread blocking across multiple assets.
+                pf_pnl = pf_sim.run(render_chart=False)
                 pf_results.append({
                     "Asset": asset,
                     "Amount Invested": f"{pf_sim.total_invested:.2f} {pf_token_in}",

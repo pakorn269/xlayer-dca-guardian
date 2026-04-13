@@ -102,7 +102,9 @@ class DCASimulator:
         plt.close()
         print(f"\n📈 Visual Chart Generated: {os.path.abspath(out_path)}")
 
-    def run(self) -> float:
+    # ⚡ Bolt Optimization: Added render_chart parameter to optionally bypass
+    # expensive synchronous Matplotlib chart generation when unused.
+    def run(self, render_chart: bool = True) -> float:
         from onchain_utils import get_treasury
 
         # Guard: same token in and out is a no-op
@@ -155,7 +157,8 @@ class DCASimulator:
         
         treasury = get_treasury()
 
-        self.render_chart(prices)
+        if render_chart:
+            self.render_chart(prices)
 
         print(f"\n--- SIMULATION RESULTS ---")
         print(f"Total Invested    : {self.total_invested:.2f} {self.token_in}")
