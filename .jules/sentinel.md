@@ -27,3 +27,8 @@
 **Vulnerability:** Raw `stdout` and `stderr` payloads from `subprocess.run` were being returned directly in error handlers, potentially leaking sensitive execution details, CLI internals, or stack traces to callers (and the frontend UI).
 **Learning:** `subprocess.CalledProcessError.stderr` and unparsed `subprocess.CompletedProcess.stdout` can contain system paths, execution arguments, or debug information that should not be visible to users.
 **Prevention:** Catch specific exceptions (like `subprocess.CalledProcessError` or `json.JSONDecodeError`) and return sanitized, generic error strings instead of passing raw underlying logs.
+
+## 2026-04-13 - Prevent Denial of Service (DoS) via Subprocess Timeouts
+**Vulnerability:** Synchronous `subprocess.run` calls to `onchainos` CLI did not have explicit `timeout` limits. If the CLI hung or became unresponsive, the main application thread would block indefinitely, leading to a Denial of Service (DoS) and potential thread exhaustion.
+**Learning:** External processes, even local CLIs interacting with networks, are inherently unreliable and can hang. Failing to enforce a timeout on synchronous operations exposes the application to DoS attacks or severe unresponsiveness.
+**Prevention:** Always enforce an explicit `timeout` parameter (e.g., `timeout=15`) on all synchronous `subprocess.run` calls and gracefully handle the resulting `subprocess.TimeoutExpired` exception to prevent thread blocking and maintain application stability.
