@@ -229,7 +229,7 @@ with tab3:
                     duration_days=int(pf_duration),
                     is_testnet=is_testnet,
                 )
-                pf_pnl = pf_sim.run()
+                pf_pnl = pf_sim.run(render_visuals=False)
                 pf_results.append({
                     "Asset": asset,
                     "Amount Invested": f"{pf_sim.total_invested:.2f} {pf_token_in}",
