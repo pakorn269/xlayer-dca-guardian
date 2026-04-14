@@ -200,7 +200,7 @@ with tab3:
         col_pf1, col_pf2 = st.columns(2)
         with col_pf1:
             pf_token_in = st.selectbox("Funding Token:", ["USDC", "USDT"], help="The stablecoin you will use to fund the investments.")
-            pf_total_amount = st.number_input("Total Amount per Interval", min_value=1.0, value=100.0, help="The total amount to invest across all selected assets per interval.")
+            pf_total_amount = st.number_input("Total Amount per Interval", min_value=1.0, value=100.0, help="The total amount to invest across all selected assets per interval. Example: $100 total across 4 assets = $25 per asset.")
         with col_pf2:
             default_interval = st.session_state.dca_params["interval"] if st.session_state.dca_params else 7
             default_duration = st.session_state.dca_params["duration"] if st.session_state.dca_params else 30
@@ -348,7 +348,7 @@ st.markdown("---")
 with st.expander("📜 Past Simulations"):
     hist_result = cached_load_simulation_history()
     if hist_result is None:
-        st.info("No simulations run yet.")
+        st.info("No simulations run yet. Try running a dry-run simulation above to see your history.")
     elif "error" in hist_result:
         st.error(hist_result["error"])
     else:
@@ -357,4 +357,4 @@ with st.expander("📜 Past Simulations"):
             st.caption(f"{len(hist_data)} simulation(s) recorded.")
             st.dataframe(list(reversed(hist_data)), use_container_width=True)
         else:
-            st.info("No simulations run yet.")
+            st.info("No simulations run yet. Try running a dry-run simulation above to see your history.")
