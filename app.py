@@ -111,7 +111,7 @@ st.sidebar.info(f"The agent collects a {PROTOCOL_FEE_PERCENT}% protocol fee upon
 
 treasury = cached_get_treasury()
 if treasury["balance"] == 0.0:
-    st.sidebar.info("No fees collected yet.")
+    st.sidebar.info("No fees collected yet. Execute a real swap to start building the treasury!")
 else:
     st.sidebar.metric("Treasury Balance:", f"{treasury['balance']:.4f} {treasury['currency']}")
 
@@ -348,7 +348,7 @@ st.markdown("---")
 with st.expander("📜 Past Simulations"):
     hist_result = cached_load_simulation_history()
     if hist_result is None:
-        st.info("No simulations run yet.")
+        st.info("No simulations run yet. Configure a strategy above and click 'Run Simulation' to see results here!")
     elif "error" in hist_result:
         st.error(hist_result["error"])
     else:
@@ -357,4 +357,4 @@ with st.expander("📜 Past Simulations"):
             st.caption(f"{len(hist_data)} simulation(s) recorded.")
             st.dataframe(list(reversed(hist_data)), use_container_width=True)
         else:
-            st.info("No simulations run yet.")
+            st.info("No simulations run yet. Configure a strategy above and click 'Run Simulation' to see results here!")
