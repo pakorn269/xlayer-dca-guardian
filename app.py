@@ -111,7 +111,7 @@ st.sidebar.info(f"The agent collects a {PROTOCOL_FEE_PERCENT}% protocol fee upon
 
 treasury = cached_get_treasury()
 if treasury["balance"] == 0.0:
-    st.sidebar.info("No fees collected yet.")
+    st.sidebar.info("No fees collected yet. Execute a real swap to start building the treasury!")
 else:
     st.sidebar.metric("Treasury Balance:", f"{treasury['balance']:.4f} {treasury['currency']}")
 
