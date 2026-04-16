@@ -28,6 +28,10 @@
 **Learning:** `subprocess.CalledProcessError.stderr` and unparsed `subprocess.CompletedProcess.stdout` can contain system paths, execution arguments, or debug information that should not be visible to users.
 **Prevention:** Catch specific exceptions (like `subprocess.CalledProcessError` or `json.JSONDecodeError`) and return sanitized, generic error strings instead of passing raw underlying logs.
 
+## 2026-04-15 - Prevent Denial of Service via Subprocess Thread Exhaustion
+**Vulnerability:** Synchronous `subprocess.run` calls to external CLI tools (e.g., `onchainos`) were made without a `timeout` parameter. If the external process hangs or takes too long, it indefinitely blocks the thread (and Streamlit's UI thread), leading to a Denial of Service (DoS) through thread exhaustion.
+**Learning:** Never assume external processes or CLIs will return promptly. Always design for failure by explicitly defining how long an operation is allowed to run before failing securely.
+**Prevention:** Enforce explicit `timeout` parameters on all synchronous `subprocess.run` calls (e.g., `timeout=15`). Always catch `subprocess.TimeoutExpired` alongside standard process errors to fail gracefully and return sanitized messages to the frontend.
 ## 2026-04-09 - Prevent Denial of Service via Subprocess Thread Exhaustion
 **Vulnerability:** Multiple synchronous `subprocess.run` calls in `onchain_utils.py` (e.g., `execute_swap`, `get_historical_kline`) did not enforce execution timeouts. If the `onchainos` CLI process hangs or delays indefinitely, the calling Python thread will block forever, leading to thread exhaustion and a Denial of Service (DoS) condition in the main application.
 **Learning:** Security and resilience require that all external system calls or subprocess invocations have strict time boundaries to prevent resource starvation.
