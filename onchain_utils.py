@@ -73,8 +73,8 @@ def get_historical_kline(token_address: str, chain_id: int):
             if prices:
                 return list(reversed(prices))
         return None
-    except (Exception, subprocess.TimeoutExpired) as e:
-        print(f"[!] Warning: MCP Market K-line fetch failed. Offline rendering applied.")
+    except (subprocess.TimeoutExpired, Exception) as e:
+        print(f"[!] Warning: MCP Market K-line fetch failed (or timed out). Offline rendering applied.")
         return None
 
 def get_swap_quote(token_in: str, token_out: str, amount: str, chain_id: int):
@@ -140,9 +140,10 @@ def execute_swap(token_in: str, token_out: str, max_amount_in: str, chain_id: in
 
     wallet_name = "Account 1"
     try:
-        res = subprocess.run(["onchainos", "wallet", "status"], capture_output=True, text=True, timeout=15)
+        res = subprocess.run(["onchainos", "wallet", "status"], capture_output=True, text=True, timeout=10)
         wallet_name = json.loads(res.stdout).get("data", {}).get("currentAccountName", "Account 1")
-    except (Exception, subprocess.TimeoutExpired): pass
+    except Exception:
+        pass
 
     command = [
         "onchainos", "swap", "execute",
@@ -160,9 +161,9 @@ def execute_swap(token_in: str, token_out: str, max_amount_in: str, chain_id: in
         print("------------------------\n")
         return True, result.stdout
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        print("\n[Error] Failed executing swap")
+        print("\n[Error] Failed executing swap (or timed out)")
         # 🛡️ Sentinel: Do not leak command line stderr to the UI to prevent stack trace/internal state exposure
-        return False, "Swap execution failed on the node. Please check server logs for details."
+        return False, "Swap execution failed or timed out on the node. Please check server logs for details."
 
 def check_wallet_status() -> bool:
     try:
@@ -174,8 +175,8 @@ def check_wallet_status() -> bool:
         else:
             print("[WARN] Wallet not logged in. Please run 'onchainos wallet login'.")
             return False
-    except (Exception, subprocess.TimeoutExpired) as e:
-        print("[ERROR] Checking wallet failed.")
+    except (subprocess.TimeoutExpired, Exception) as e:
+        print("[ERROR] Checking wallet failed (or timed out).")
         return False
 
 def get_wallet_balance_usd(chain_id: int) -> str:
@@ -184,11 +185,11 @@ def get_wallet_balance_usd(chain_id: int) -> str:
     if chain_id == CHAIN_ID_TESTNET:
         return "15,000.00"
     try:
-        res = subprocess.run(["onchainos", "wallet", "balance", "--chain", str(chain_id)], capture_output=True, text=True, timeout=10)
+        res = subprocess.run(["onchainos", "wallet", "balance", "--chain", str(chain_id)], capture_output=True, text=True, timeout=15)
         data = json.loads(res.stdout)
         if data.get("ok"):
             val = float(data.get("data", {}).get("totalValueUsd", "0.00"))
             return f"{val:,.2f}"
-    except (Exception, subprocess.TimeoutExpired):
+    except Exception:
         pass
     return "0.00"
