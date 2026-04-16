@@ -102,8 +102,6 @@ class DCASimulator:
         plt.close()
         print(f"\n📈 Visual Chart Generated: {os.path.abspath(out_path)}")
 
-    # ⚡ Bolt Optimization: Added render_chart parameter to optionally bypass
-    # expensive synchronous Matplotlib chart generation when unused.
     def run(self, render_chart: bool = True) -> float:
         from onchain_utils import get_treasury
 
