@@ -9,3 +9,6 @@
 ## 2026-04-15 - Skipping Expensive Unused Chart Generation
 **Learning:** In the portfolio split simulation (`app.py`), the `DCASimulator.run()` function was generating a matplotlib chart for every asset in the loop, even though the Streamlit UI only uses the raw price data to render a single consolidated chart and discards the individual PNG files. This blocked the main thread with slow, unused side-effects.
 **Action:** When reusing functions that trigger expensive side-effects (like generating visual charts) in loops or contexts where those side-effects are unneeded, add an explicit opt-out parameter (e.g., `render_chart=False`) to bypass the bottleneck.
+## 2025-04-12 - Skipping Unused Heavy Side-Effects in Loops
+**Learning:** Generating unused charts (like `matplotlib` figures) inside loops creates a blocking performance bottleneck, even if the charts aren't displayed. In the `Multi-Asset DCA Split` feature, generating hidden charts took ~0.5s per asset (~2.8s total).
+**Action:** Always add an explicit opt-out parameter (e.g., `render_chart=False`) for expensive side-effects when reusing functions in contexts where those side-effects are unneeded.
