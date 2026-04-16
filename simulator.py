@@ -102,7 +102,7 @@ class DCASimulator:
         plt.close()
         print(f"\n📈 Visual Chart Generated: {os.path.abspath(out_path)}")
 
-    def run(self, render_visuals: bool = True) -> float:
+    def run(self, render_chart: bool = True) -> float:
         from onchain_utils import get_treasury
 
         # Guard: same token in and out is a no-op
@@ -155,7 +155,7 @@ class DCASimulator:
         
         treasury = get_treasury()
 
-        if render_visuals:
+        if render_chart:
             self.render_chart(prices)
 
         print(f"\n--- SIMULATION RESULTS ---")
