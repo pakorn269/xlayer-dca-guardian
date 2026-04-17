@@ -220,8 +220,10 @@ with tab3:
         all_normalized = {}
 
         with st.spinner(f"Running simulations for {n} assets..."):
-            for asset in selected_assets:
-                pf_sim = DCASimulator(
+            import concurrent.futures
+
+            def _run_sim(asset):
+                sim = DCASimulator(
                     token_in=pf_token_in,
                     token_out=asset,
                     dca_amount=amount_per_asset,
@@ -231,7 +233,15 @@ with tab3:
                 )
                 # ⚡ Bolt Optimization: Skip expensive matplotlib chart generation for each asset
                 # saving ~0.5s per asset since the split view uses native Streamlit charts
-                pf_pnl = pf_sim.run(render_chart=False)
+                pnl = sim.run(render_chart=False)
+                return asset, sim, pnl
+
+            # ⚡ Bolt Optimization: Parallelize multi-asset independent simulations
+            # to prevent UI-blocking delays from sequential subprocess CLI calls
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                results = executor.map(_run_sim, selected_assets)
+
+            for asset, pf_sim, pf_pnl in results:
                 pf_results.append({
                     "Asset": asset,
                     "Amount Invested": f"{pf_sim.total_invested:.2f} {pf_token_in}",
