@@ -269,7 +269,8 @@ if st.session_state.dca_params:
     col_sim, col_exec = st.columns(2)
     
     with col_sim:
-        if st.button("🔮 Run Simulation (Dry-Run)", use_container_width=True, help="Simulates the strategy against historical data without spending funds"):
+        btn_clicked = st.button("🔮 Run Simulation (Dry-Run)", use_container_width=True, help="Simulates the strategy against historical data without spending funds")
+        if btn_clicked or st.session_state.pop('trigger_sim', False):
             if dca_params["token_in"] == dca_params["token_out"]:
                 st.error("Token In and Token Out cannot be the same asset.")
             else:
@@ -350,7 +351,13 @@ st.markdown("---")
 with st.expander("📜 Past Simulations"):
     hist_result = cached_load_simulation_history()
     if hist_result is None:
-        st.info("No simulations run yet. Try running a dry-run simulation above to see your history.")
+        if st.session_state.dca_params:
+            st.info("No simulations run yet.")
+            if st.button("🔮 Run your first Dry-Run Simulation", use_container_width=True):
+                st.session_state.trigger_sim = True
+                st.rerun()
+        else:
+            st.info("No simulations run yet. Parse a strategy above to see your history.")
     elif "error" in hist_result:
         st.error(hist_result["error"])
     else:
