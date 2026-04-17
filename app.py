@@ -294,7 +294,8 @@ if st.session_state.dca_params:
                         "token_out": sim.token_out,
                         "pnl_perc": pnl_perc,
                         "csv_data": sim.get_trades_csv(),
-                        "dca_params": dca_params
+                        "dca_params": dca_params,
+                        "chart_data": sim.chart_data
                     }
                     
     with col_exec:
@@ -343,8 +344,8 @@ if st.session_state.dca_params:
             use_container_width=True
         )
         
-        if os.path.exists("dca_simulation_chart.png"):
-            st.image("dca_simulation_chart.png")
+        if res.get("chart_data"):
+            st.image(res["chart_data"])
 
 st.markdown("---")
 with st.expander("📜 Past Simulations"):

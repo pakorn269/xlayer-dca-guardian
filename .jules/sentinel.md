@@ -40,3 +40,8 @@
 **Vulnerability:** Calls to external CLI tools (`onchainos`) via `subprocess.run` lacked a `timeout` parameter, allowing a hanging, unresponsive, or maliciously delayed node process to indefinitely block the application's execution thread, creating a Denial of Service (DoS) risk.
 **Learning:** Any blocking synchronous operation that communicates with external systems (including local CLIs or network requests via subprocesses) without a strict bound can lead to thread exhaustion and complete application unavailability.
 **Prevention:** Always enforce a strict `timeout` parameter on all `subprocess.run` calls (e.g., `timeout=15`) and gracefully handle the resulting `subprocess.TimeoutExpired` exception to ensure system resilience.
+
+## 2026-04-18 - Prevent Insecure File Generation and Disk Exhaustion
+**Vulnerability:** The application previously generated and overwritten a single static file (`dca_simulation_chart.png`) during simulations. Generating per-request files with UUIDs prevents race conditions but creates a Denial of Service (DoS) vulnerability via disk exhaustion if the files are not explicitly cleaned up.
+**Learning:** Writing ephemeral artifacts to disk creates lifecycle management complexity and risks resource exhaustion if cleanup fails or is omitted.
+**Prevention:** Always prefer using in-memory buffers (like `io.BytesIO`) instead of disk storage for temporary artifact generation (like images or charts) that are only needed for immediate UI rendering or data transmission.
