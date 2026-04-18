@@ -259,7 +259,16 @@ with tab3:
                 st.line_chart(pd.DataFrame(all_normalized))
 
 if not st.session_state.dca_params:
-    st.info("Parse a strategy above to see simulation options.")
+    st.info("No strategy set yet. Parse a strategy above or load an example to see simulation options.")
+    if st.button("✨ Load Example Strategy", use_container_width=True, help="Automatically fills in a standard DCA strategy to get you started"):
+        st.session_state.dca_params = {
+            "token_in": "USDC",
+            "token_out": "ETH",
+            "amount": 50.0,
+            "interval": 7,
+            "duration": 30
+        }
+        st.rerun()
 
 if st.session_state.dca_params:
     dca_params = st.session_state.dca_params
@@ -276,7 +285,8 @@ if st.session_state.dca_params:
     col_sim, col_exec = st.columns(2)
     
     with col_sim:
-        if st.button("🔮 Run Simulation (Dry-Run)", use_container_width=True, help="Simulates the strategy against historical data without spending funds"):
+        sim_btn = st.button("🔮 Run Simulation (Dry-Run)", use_container_width=True, help="Simulates the strategy against historical data without spending funds")
+        if sim_btn or st.session_state.pop("trigger_sim", False):
             if dca_params["token_in"] == dca_params["token_out"]:
                 st.error("Token In and Token Out cannot be the same asset.")
             else:
@@ -357,7 +367,22 @@ st.markdown("---")
 with st.expander("📜 Past Simulations"):
     hist_result = cached_load_simulation_history()
     if hist_result is None:
-        st.info("No simulations run yet. Try running a dry-run simulation above to see your history.")
+        st.info("No simulations run yet. Run a simulation to start building your history.")
+        if st.session_state.dca_params:
+            if st.button("🚀 Run Simulation Now", use_container_width=True, key="run_sim_now_1"):
+                st.session_state.trigger_sim = True
+                st.rerun()
+        else:
+            if st.button("🔄 Run Example Simulation", use_container_width=True, key="run_example_1"):
+                st.session_state.dca_params = {
+                    "token_in": "USDC",
+                    "token_out": "ETH",
+                    "amount": 50.0,
+                    "interval": 7,
+                    "duration": 30
+                }
+                st.session_state.trigger_sim = True
+                st.rerun()
     elif "error" in hist_result:
         st.error(hist_result["error"])
     else:
@@ -366,4 +391,19 @@ with st.expander("📜 Past Simulations"):
             st.caption(f"{len(hist_data)} simulation(s) recorded.")
             st.dataframe(list(reversed(hist_data)), use_container_width=True)
         else:
-            st.info("No simulations run yet. Try running a dry-run simulation above to see your history.")
+            st.info("No simulations run yet. Run a simulation to start building your history.")
+            if st.session_state.dca_params:
+                if st.button("🚀 Run Simulation Now", use_container_width=True, key="run_sim_now_2"):
+                    st.session_state.trigger_sim = True
+                    st.rerun()
+            else:
+                if st.button("🔄 Run Example Simulation", use_container_width=True, key="run_example_2"):
+                    st.session_state.dca_params = {
+                        "token_in": "USDC",
+                        "token_out": "ETH",
+                        "amount": 50.0,
+                        "interval": 7,
+                        "duration": 30
+                    }
+                    st.session_state.trigger_sim = True
+                    st.rerun()
