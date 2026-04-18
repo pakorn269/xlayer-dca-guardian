@@ -220,7 +220,9 @@ with tab3:
         all_normalized = {}
 
         with st.spinner(f"Running simulations for {n} assets..."):
-            for asset in selected_assets:
+            import concurrent.futures
+
+            def run_simulation_for_asset(asset):
                 pf_sim = DCASimulator(
                     token_in=pf_token_in,
                     token_out=asset,
@@ -232,15 +234,20 @@ with tab3:
                 # ⚡ Bolt Optimization: Skip expensive matplotlib chart generation for each asset
                 # saving ~0.5s per asset since the split view uses native Streamlit charts
                 pf_pnl = pf_sim.run(render_chart=False)
-                pf_results.append({
-                    "Asset": asset,
-                    "Amount Invested": f"{pf_sim.total_invested:.2f} {pf_token_in}",
-                    "Units Accumulated": f"{pf_sim.total_accumulated:.6f}",
-                    "PNL %": f"{pf_pnl:.2f}%",
-                })
-                if pf_sim.prices and pf_sim.prices[0] != 0:
-                    base = pf_sim.prices[0]
-                    all_normalized[asset] = [(p / base) * 100 for p in pf_sim.prices]
+                return asset, pf_sim, pf_pnl
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
+                # Use map to preserve the original order of selected_assets
+                for asset, pf_sim, pf_pnl in executor.map(run_simulation_for_asset, selected_assets):
+                    pf_results.append({
+                        "Asset": asset,
+                        "Amount Invested": f"{pf_sim.total_invested:.2f} {pf_token_in}",
+                        "Units Accumulated": f"{pf_sim.total_accumulated:.6f}",
+                        "PNL %": f"{pf_pnl:.2f}%",
+                    })
+                    if pf_sim.prices and pf_sim.prices[0] != 0:
+                        base = pf_sim.prices[0]
+                        all_normalized[asset] = [(p / base) * 100 for p in pf_sim.prices]
 
         col_table, col_chart = st.columns(2)
         with col_table:
