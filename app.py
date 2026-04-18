@@ -222,8 +222,8 @@ with tab3:
         with st.spinner(f"Running simulations for {n} assets..."):
             import concurrent.futures
 
-            def _run_sim(asset):
-                sim = DCASimulator(
+            def run_simulation_for_asset(asset):
+                pf_sim = DCASimulator(
                     token_in=pf_token_in,
                     token_out=asset,
                     dca_amount=amount_per_asset,
@@ -233,24 +233,21 @@ with tab3:
                 )
                 # ⚡ Bolt Optimization: Skip expensive matplotlib chart generation for each asset
                 # saving ~0.5s per asset since the split view uses native Streamlit charts
-                pnl = sim.run(render_chart=False)
-                return asset, sim, pnl
+                pf_pnl = pf_sim.run(render_chart=False)
+                return asset, pf_sim, pf_pnl
 
-            # ⚡ Bolt Optimization: Parallelize multi-asset independent simulations
-            # to prevent UI-blocking delays from sequential subprocess CLI calls
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                results = executor.map(_run_sim, selected_assets)
-
-            for asset, pf_sim, pf_pnl in results:
-                pf_results.append({
-                    "Asset": asset,
-                    "Amount Invested": f"{pf_sim.total_invested:.2f} {pf_token_in}",
-                    "Units Accumulated": f"{pf_sim.total_accumulated:.6f}",
-                    "PNL %": f"{pf_pnl:.2f}%",
-                })
-                if pf_sim.prices and pf_sim.prices[0] != 0:
-                    base = pf_sim.prices[0]
-                    all_normalized[asset] = [(p / base) * 100 for p in pf_sim.prices]
+            with concurrent.futures.ThreadPoolExecutor(max_workers=n) as executor:
+                # Use map to preserve the original order of selected_assets
+                for asset, pf_sim, pf_pnl in executor.map(run_simulation_for_asset, selected_assets):
+                    pf_results.append({
+                        "Asset": asset,
+                        "Amount Invested": f"{pf_sim.total_invested:.2f} {pf_token_in}",
+                        "Units Accumulated": f"{pf_sim.total_accumulated:.6f}",
+                        "PNL %": f"{pf_pnl:.2f}%",
+                    })
+                    if pf_sim.prices and pf_sim.prices[0] != 0:
+                        base = pf_sim.prices[0]
+                        all_normalized[asset] = [(p / base) * 100 for p in pf_sim.prices]
 
         col_table, col_chart = st.columns(2)
         with col_table:
@@ -262,7 +259,16 @@ with tab3:
                 st.line_chart(pd.DataFrame(all_normalized))
 
 if not st.session_state.dca_params:
-    st.info("Parse a strategy above to see simulation options.")
+    st.info("No strategy set yet. Parse a strategy above or load an example to see simulation options.")
+    if st.button("✨ Load Example Strategy", use_container_width=True, help="Automatically fills in a standard DCA strategy to get you started"):
+        st.session_state.dca_params = {
+            "token_in": "USDC",
+            "token_out": "ETH",
+            "amount": 50.0,
+            "interval": 7,
+            "duration": 30
+        }
+        st.rerun()
 
 if st.session_state.dca_params:
     dca_params = st.session_state.dca_params
@@ -279,7 +285,8 @@ if st.session_state.dca_params:
     col_sim, col_exec = st.columns(2)
     
     with col_sim:
-        if st.button("🔮 Run Simulation (Dry-Run)", use_container_width=True, help="Simulates the strategy against historical data without spending funds"):
+        sim_btn = st.button("🔮 Run Simulation (Dry-Run)", use_container_width=True, help="Simulates the strategy against historical data without spending funds")
+        if sim_btn or st.session_state.pop("trigger_sim", False):
             if dca_params["token_in"] == dca_params["token_out"]:
                 st.error("Token In and Token Out cannot be the same asset.")
             else:
@@ -360,7 +367,22 @@ st.markdown("---")
 with st.expander("📜 Past Simulations"):
     hist_result = cached_load_simulation_history()
     if hist_result is None:
-        st.info("No simulations run yet. Try running a dry-run simulation above to see your history.")
+        st.info("No simulations run yet. Run a simulation to start building your history.")
+        if st.session_state.dca_params:
+            if st.button("🚀 Run Simulation Now", use_container_width=True, key="run_sim_now_1"):
+                st.session_state.trigger_sim = True
+                st.rerun()
+        else:
+            if st.button("🔄 Run Example Simulation", use_container_width=True, key="run_example_1"):
+                st.session_state.dca_params = {
+                    "token_in": "USDC",
+                    "token_out": "ETH",
+                    "amount": 50.0,
+                    "interval": 7,
+                    "duration": 30
+                }
+                st.session_state.trigger_sim = True
+                st.rerun()
     elif "error" in hist_result:
         st.error(hist_result["error"])
     else:
@@ -369,4 +391,19 @@ with st.expander("📜 Past Simulations"):
             st.caption(f"{len(hist_data)} simulation(s) recorded.")
             st.dataframe(list(reversed(hist_data)), use_container_width=True)
         else:
-            st.info("No simulations run yet. Try running a dry-run simulation above to see your history.")
+            st.info("No simulations run yet. Run a simulation to start building your history.")
+            if st.session_state.dca_params:
+                if st.button("🚀 Run Simulation Now", use_container_width=True, key="run_sim_now_2"):
+                    st.session_state.trigger_sim = True
+                    st.rerun()
+            else:
+                if st.button("🔄 Run Example Simulation", use_container_width=True, key="run_example_2"):
+                    st.session_state.dca_params = {
+                        "token_in": "USDC",
+                        "token_out": "ETH",
+                        "amount": 50.0,
+                        "interval": 7,
+                        "duration": 30
+                    }
+                    st.session_state.trigger_sim = True
+                    st.rerun()
