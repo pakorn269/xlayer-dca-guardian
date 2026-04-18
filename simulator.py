@@ -33,6 +33,7 @@ class DCASimulator:
         self.gas_estimate = 0.0
         self.prices = []           # exposed for Portfolio Split chart
         self.avg_cost_final = 0.0  # exposed after run()
+        self.chart_data = None     # exposed after run()
 
     def fetch_historical_prices(self) -> List[float]:
         from onchain_utils import get_historical_kline, get_swap_quote
@@ -97,10 +98,13 @@ class DCASimulator:
         plt.legend()
         plt.tight_layout()
 
-        out_path = "dca_simulation_chart.png"
-        plt.savefig(out_path, dpi=120)
+        import io
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=120)
+        self.chart_data = buf.getvalue()
+        buf.close()
         plt.close()
-        print(f"\n📈 Visual Chart Generated: {os.path.abspath(out_path)}")
+        print(f"\n📈 Visual Chart Generated in memory.")
 
     def run(self, render_chart: bool = True) -> float:
         from onchain_utils import get_treasury
