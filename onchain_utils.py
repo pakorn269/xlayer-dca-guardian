@@ -156,10 +156,20 @@ def execute_swap(token_in: str, token_out: str, max_amount_in: str, chain_id: in
     ]
     try:
         result = subprocess.run(command, capture_output=True, text=True, check=True, timeout=30)
-        print("\n--- ONCHAINOS OUTPUT ---")
-        print(result.stdout)
-        print("------------------------\n")
-        return True, result.stdout
+        try:
+            data = json.loads(result.stdout)
+            tx_hash = data.get("data", {}).get("txHash", "unknown_hash")
+            safe_output = json.dumps({
+                "ok": True,
+                "data": {"txHash": tx_hash}
+            }, indent=2)
+            print("\n--- ONCHAINOS OUTPUT ---")
+            print(safe_output)
+            print("------------------------\n")
+            return True, safe_output
+        except json.JSONDecodeError:
+            # 🛡️ Sentinel: Prevent Information Disclosure on malformed output
+            return False, "Received invalid response from the node. Execution status unknown."
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         print("\n[Error] Failed executing swap (or timed out)")
         # 🛡️ Sentinel: Do not leak command line stderr to the UI to prevent stack trace/internal state exposure

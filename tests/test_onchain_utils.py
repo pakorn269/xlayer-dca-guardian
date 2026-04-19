@@ -125,6 +125,7 @@ def test_execute_swap_testnet():
 
 def test_execute_swap_mainnet_success():
     mock_stdout = json.dumps({"ok": True, "data": {"txHash": "0xhash"}})
+    expected_stdout = json.dumps({"ok": True, "data": {"txHash": "0xhash"}}, indent=2)
     with patch("subprocess.run") as mock_run:
         # First call to check wallet status (optional depending on implementation)
         # Actually execute_swap calls wallet status first to get wallet name
@@ -134,7 +135,7 @@ def test_execute_swap_mainnet_success():
         ]
         success, stdout = execute_swap("USDC", "ETH", "100", 196)
         assert success is True
-        assert stdout == mock_stdout
+        assert stdout == expected_stdout
 
 def test_check_wallet_status_true():
     mock_stdout = json.dumps({"ok": True, "data": {"loggedIn": True, "currentAccountName": "TestAcc"}})
