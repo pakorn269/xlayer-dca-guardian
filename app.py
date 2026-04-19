@@ -181,6 +181,7 @@ with tab2:
             "interval": mi_interval,
             "duration": mi_duration
         }
+        st.toast("Strategy parameters saved!", icon="💾")
 
 with tab3:
     st.markdown("### 💼 Multi-Asset DCA Split")
