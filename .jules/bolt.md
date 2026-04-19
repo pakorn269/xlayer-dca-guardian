@@ -19,3 +19,6 @@
 ## 2025-04-16 - Concurrent execution for slow synchronous I/O loops
 **Learning:** Synchronous iterations that execute slow operations like subprocess calls (e.g. `onchainos` CLI) cause UI-blocking delays proportional to the loop length.
 **Action:** Parallelize the iterations utilizing `concurrent.futures.ThreadPoolExecutor` to execute the independent slow operations concurrently, drastically reducing the overall execution time.
+## 2025-04-19 - Cache Long-Lived Synchronous Subprocess Calls with TTL
+**Learning:** `functools.lru_cache` indefinitely caches values. When caching data from external services like live prices from an API, using it without a Time-To-Live (TTL) introduces stale data risks, potentially breaking financial applications where prices frequently update.
+**Action:** When caching external dynamic data, use a custom `ttl_cache` decorator that supports both LRU eviction and time-based invalidation to safely prevent redundant remote calls while avoiding stale data.

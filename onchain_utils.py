@@ -4,6 +4,45 @@ import re
 
 import os
 
+
+import time
+import functools
+import threading
+
+def ttl_cache(maxsize=32, ttl=60):
+    def decorator(func):
+        cache = {}
+        lock = threading.Lock()
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            key = (args, frozenset(kwargs.items()))
+            now = time.time()
+
+            with lock:
+                if key in cache:
+                    result, timestamp = cache[key]
+                    if now - timestamp < ttl:
+                        return result
+
+            result = func(*args, **kwargs)
+
+            with lock:
+                if len(cache) >= maxsize:
+                    # Thread-safe eviction
+                    oldest_key = min(cache.keys(), key=lambda k: cache[k][1])
+                    if oldest_key in cache:
+                        del cache[oldest_key]
+                cache[key] = (result, now)
+            return result
+
+        def cache_clear():
+            with lock:
+                cache.clear()
+        wrapper.cache_clear = cache_clear
+        return wrapper
+    return decorator
+
+
 TREASURY_FILE = "treasury.json"
 
 
@@ -47,6 +86,7 @@ def collect_fee(amount: float, currency: str, is_testnet: bool = False):
         print(f"Treasury reached >= 5 {currency}. Automatically minting 'DCA Guardian Badge' NFT on X Layer {net_suffix}!")
         print(f"(For MVP: Simulated mint transaction logged.)\n")
 
+@ttl_cache(maxsize=32, ttl=60)
 def get_historical_kline(token_address: str, chain_id: int):
     """
     Fetches historical k-line prices via okx-dex-market using dynamic chain_id.
