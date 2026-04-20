@@ -181,7 +181,7 @@ with tab2:
             "interval": mi_interval,
             "duration": mi_duration
         }
-        st.toast("Strategy parameters saved!", icon="💾")
+        st.toast("✅ Strategy parameters saved!", icon="⚙️")
 
 with tab3:
     st.markdown("### 💼 Multi-Asset DCA Split")
@@ -250,6 +250,8 @@ with tab3:
                         base = pf_sim.prices[0]
                         all_normalized[asset] = [(p / base) * 100 for p in pf_sim.prices]
 
+            st.toast("✅ Portfolio simulation complete!", icon="🚀")
+
         col_table, col_chart = st.columns(2)
         with col_table:
             st.markdown("#### ⚖️ Split Results")
@@ -315,6 +317,7 @@ if st.session_state.dca_params:
                         "dca_params": dca_params,
                         "chart_data": sim.chart_data
                     }
+                    st.toast("✅ Simulation complete!", icon="🔮")
                     
     with col_exec:
         btn_help = "Signs and executes the transaction on the selected network" if st.session_state.get('wallet_verified', False) else "⚠️ Please authorize the TEE wallet via sidebar to enable execution"
