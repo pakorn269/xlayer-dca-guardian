@@ -95,6 +95,7 @@ def test_get_historical_kline_failure():
         assert result is None
 
 def test_get_swap_quote_success():
+    get_swap_quote.cache_clear()
     mock_stdout = json.dumps({
         "ok": True,
         "data": {
@@ -110,6 +111,7 @@ def test_get_swap_quote_success():
         assert data["ok"] is True
 
 def test_get_swap_quote_error():
+    get_swap_quote.cache_clear()
     with patch("subprocess.run") as mock_run:
         mock_run.side_effect = subprocess.CalledProcessError(1, "cmd")
         estimated_out, gas_okb, data = get_swap_quote("USDC", "ETH", "100", 196)

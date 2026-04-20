@@ -118,6 +118,10 @@ def get_historical_kline(token_address: str, chain_id: int):
         print(f"[!] Warning: MCP Market K-line fetch failed (or timed out). Offline rendering applied.")
         return None
 
+# ⚡ Bolt Optimization: Use ttl_cache to memoize repetitive DEX quote fetches.
+# This prevents blocking the UI thread during frequent multi-asset simulations
+# or Streamlit re-renders while ensuring live quote data doesn't get dangerously stale.
+@ttl_cache(maxsize=32, ttl=60)
 def get_swap_quote(token_in: str, token_out: str, amount: str, chain_id: int):
     """
     Calls 'onchainos swap quote' to estimate output tokens and gas with dynamic chain_id.
