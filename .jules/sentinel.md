@@ -45,3 +45,8 @@
 **Vulnerability:** The application previously generated and overwritten a single static file (`dca_simulation_chart.png`) during simulations. Generating per-request files with UUIDs prevents race conditions but creates a Denial of Service (DoS) vulnerability via disk exhaustion if the files are not explicitly cleaned up.
 **Learning:** Writing ephemeral artifacts to disk creates lifecycle management complexity and risks resource exhaustion if cleanup fails or is omitted.
 **Prevention:** Always prefer using in-memory buffers (like `io.BytesIO`) instead of disk storage for temporary artifact generation (like images or charts) that are only needed for immediate UI rendering or data transmission.
+
+## 2026-04-19 - Prevent Information Disclosure via Unparsed CLI JSON Output
+**Vulnerability:** The `execute_swap` function in `onchain_utils.py` returned the raw, unparsed JSON output directly from the `onchainos swap execute` CLI command. This exposes all fields (including potentially sensitive tokens, keys, or certs returned by real node implementations) to the caller and ultimately to the Streamlit UI via `st.code()`.
+**Learning:** Returning raw JSON payloads from internal tools or APIs creates an Information Disclosure vulnerability because the underlying tool's schema may include sensitive fields (e.g., `accessToken`, `apiKey`) not intended for the end user.
+**Prevention:** Always parse the JSON response from internal CLI commands or APIs and construct a new, sanitized dictionary containing strictly only the required, safe fields (e.g., `txHash`) before returning the result to the caller or frontend.
