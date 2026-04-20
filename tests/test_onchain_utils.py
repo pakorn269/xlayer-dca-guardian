@@ -71,6 +71,7 @@ def test_collect_fee_reward_trigger(capsys):
 # 2. Onchain Interaction Tests
 
 def test_get_historical_kline_success():
+    get_historical_kline.cache_clear()
     mock_stdout = json.dumps({
         "ok": True,
         "data": [
@@ -87,6 +88,7 @@ def test_get_historical_kline_success():
         assert result == [110.0, 105.0, 100.0]
 
 def test_get_historical_kline_failure():
+    get_historical_kline.cache_clear()
     with patch("subprocess.run") as mock_run:
         mock_run.side_effect = Exception("error")
         result = get_historical_kline("0xAddress", 196)
