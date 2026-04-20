@@ -143,6 +143,7 @@ with tab1:
         "Strategy Prompt:", 
         default_text, 
         height=68,
+        max_chars=250,
         help="Describe your DCA strategy in plain English. e.g. 'Buy 50 USDC of ETH every 7 days for 1 month'"
     )
     
