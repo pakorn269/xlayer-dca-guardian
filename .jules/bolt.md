@@ -22,3 +22,6 @@
 ## 2025-04-19 - Cache Long-Lived Synchronous Subprocess Calls with TTL
 **Learning:** `functools.lru_cache` indefinitely caches values. When caching data from external services like live prices from an API, using it without a Time-To-Live (TTL) introduces stale data risks, potentially breaking financial applications where prices frequently update.
 **Action:** When caching external dynamic data, use a custom `ttl_cache` decorator that supports both LRU eviction and time-based invalidation to safely prevent redundant remote calls while avoiding stale data.
+## 2025-05-18 - Caching Deterministic Historical Market Data
+**Learning:** Functions that fetch deterministic historical data (like `get_historical_kline` calling the `onchainos` CLI) cause significant UI blocking when repeatedly invoked (e.g. during Streamlit reruns or multi-asset simulations). Because historical k-line data for past days does not change, retrieving it repeatedly is a major, unnecessary bottleneck.
+**Action:** Wrap deterministic remote data fetching functions with `@functools.lru_cache` to memoize the result. When writing unit tests for cached functions that mock underlying logic (like `subprocess.run`), explicitly call `func.cache_clear()` inside the tests to ensure mock behavior doesn't bleed across test cases.

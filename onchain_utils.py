@@ -1,4 +1,5 @@
 import subprocess
+import functools
 import json
 import re
 
@@ -86,7 +87,7 @@ def collect_fee(amount: float, currency: str, is_testnet: bool = False):
         print(f"Treasury reached >= 5 {currency}. Automatically minting 'DCA Guardian Badge' NFT on X Layer {net_suffix}!")
         print(f"(For MVP: Simulated mint transaction logged.)\n")
 
-@ttl_cache(maxsize=32, ttl=60)
+@functools.lru_cache(maxsize=32)
 def get_historical_kline(token_address: str, chain_id: int):
     """
     Fetches historical k-line prices via okx-dex-market using dynamic chain_id.
