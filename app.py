@@ -173,7 +173,13 @@ with tab2:
         mi_interval = st.number_input("Interval (Days)", min_value=1, value=7, help="Wait time in days between each purchase")
         mi_duration = st.number_input("Duration (Days)", min_value=1, value=30, help="Total length of the strategy in days")
         
-    if st.button("Set Manual Strategy", type="primary", use_container_width=True, help="Saves your manual parameters for simulation or execution"):
+    invalid_pair = mi_token_in == mi_token_out
+    if invalid_pair:
+        st.warning("⚠️ Funding Token and Asset cannot be the same.")
+
+    btn_help = "⚠️ Funding Token and Asset cannot be the same." if invalid_pair else "Saves your manual parameters for simulation or execution"
+
+    if st.button("Set Manual Strategy", type="primary", use_container_width=True, help=btn_help, disabled=invalid_pair):
         st.session_state.dca_params = {
             "token_in": mi_token_in,
             "token_out": mi_token_out,
