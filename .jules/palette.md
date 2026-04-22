@@ -8,3 +8,7 @@
 ## 2026-04-16 - Actionable Empty States
 **Learning:** A static empty state text message (like "No simulations run yet") leaves the user at a dead end. Empty states should always provide an actionable call-to-action guiding users on exactly how to populate the area or perform a related task.
 **Action:** Replace static `st.info` descriptive empty states with actionable ones that include an immediate `st.button` CTA (e.g., "Load Example Strategy" or "Run Simulation") to improve flow and engagement.
+
+## 2024-05-24 - Proactive Inline Validation for Form Parameters
+**Learning:** Users experience a disjointed workflow when validation errors for form parameters (like selecting identical tokens for a swap) are only surfaced downstream during execution (e.g., clicking "Run Simulation").
+**Action:** Provide immediate, inline validation and disable submission buttons directly within the form section when invalid parameter combinations are detected to improve the user experience.
