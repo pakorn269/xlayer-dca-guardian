@@ -50,3 +50,8 @@
 **Vulnerability:** The `execute_swap` function in `onchain_utils.py` returned the raw, unparsed JSON output directly from the `onchainos swap execute` CLI command. This exposes all fields (including potentially sensitive tokens, keys, or certs returned by real node implementations) to the caller and ultimately to the Streamlit UI via `st.code()`.
 **Learning:** Returning raw JSON payloads from internal tools or APIs creates an Information Disclosure vulnerability because the underlying tool's schema may include sensitive fields (e.g., `accessToken`, `apiKey`) not intended for the end user.
 **Prevention:** Always parse the JSON response from internal CLI commands or APIs and construct a new, sanitized dictionary containing strictly only the required, safe fields (e.g., `txHash`) before returning the result to the caller or frontend.
+
+## 2026-04-20 - Prevent Silent Data Loss from Improper "Fail Securely" Implementations
+**Vulnerability:** Adding blanket `try-except` blocks that return default values (e.g., returning balance 0 on an `IOError` during file read) to "prevent crashes" in financial modules can cause catastrophic data overwrites if the application writes back that default state later.
+**Learning:** "Fail securely" does not mean "never crash". In data-critical paths (like reading a treasury ledger), failing closed by allowing the application to crash or halt is significantly safer than hiding the error and corrupting data.
+**Prevention:** Never catch critical I/O exceptions silently to return default states if that state can subsequently be written back to disk. Use input length limits (e.g., `max_chars=250`) on frontend inputs instead as safe, non-destructive mitigations against DoS.
