@@ -59,18 +59,55 @@ def parse_nl_query_local(query: str, cli_token_in: str = None, cli_token_out: st
         )
         
         content = response.message.content.strip()
+        # 🛡️ Sentinel: Enforce length limit to prevent DoS via large JSON parsing
+        if len(content) > 2000:
+            raise ValueError("LLM response too long")
+
         # Clean Markdown if hallucinated
         if content.startswith("```json"):
-            content = content[7:-3]
+            content = content[7:-3].strip()
         elif content.startswith("```"):
-            content = content[3:-3]
+            content = content[3:-3].strip()
+
+        try:
+            parsed_data = json.loads(content)
+        except json.JSONDecodeError:
+            raise ValueError("LLM response is not valid JSON")
+
+        if not isinstance(parsed_data, dict):
+            raise ValueError("LLM response is not a JSON object")
+
+        # 🛡️ Sentinel: Validate types and values from untrusted LLM output
+        token_in_raw = parsed_data.get("token_in")
+        if isinstance(token_in_raw, str) and token_in_raw.upper() in SUPPORTED_TOKENS:
+            token_in = token_in_raw.upper()
             
-        parsed_data = json.loads(content)
-        token_in = parsed_data.get("token_in")
-        token_out = parsed_data.get("token_out")
-        amount = float(parsed_data.get("amount", amount))
-        interval_days = int(parsed_data.get("interval", interval_days))
-        duration_days = int(parsed_data.get("duration", duration_days))
+        token_out_raw = parsed_data.get("token_out")
+        if isinstance(token_out_raw, str) and token_out_raw.upper() in SUPPORTED_TOKENS:
+            token_out = token_out_raw.upper()
+
+        # Resiliently handle both numeric types and string-serialized numbers from LLM
+        amount_raw = parsed_data.get("amount")
+        try:
+            if amount_raw is not None:
+                amount = float(amount_raw)
+        except (ValueError, TypeError):
+            pass
+
+        interval_raw = parsed_data.get("interval")
+        try:
+            if interval_raw is not None:
+                interval_days = int(float(interval_raw))
+        except (ValueError, TypeError):
+            pass
+
+        duration_raw = parsed_data.get("duration")
+        try:
+            if duration_raw is not None:
+                duration_days = int(float(duration_raw))
+        except (ValueError, TypeError):
+            pass
+
         print("    -> Successfully parsed via Gemma 4!")
         parser_used = "ollama"
 

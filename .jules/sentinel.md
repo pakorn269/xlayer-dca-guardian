@@ -50,3 +50,8 @@
 **Vulnerability:** The `execute_swap` function in `onchain_utils.py` returned the raw, unparsed JSON output directly from the `onchainos swap execute` CLI command. This exposes all fields (including potentially sensitive tokens, keys, or certs returned by real node implementations) to the caller and ultimately to the Streamlit UI via `st.code()`.
 **Learning:** Returning raw JSON payloads from internal tools or APIs creates an Information Disclosure vulnerability because the underlying tool's schema may include sensitive fields (e.g., `accessToken`, `apiKey`) not intended for the end user.
 **Prevention:** Always parse the JSON response from internal CLI commands or APIs and construct a new, sanitized dictionary containing strictly only the required, safe fields (e.g., `txHash`) before returning the result to the caller or frontend.
+
+## 2026-04-21 - Prevent DoS and Type Poisoning via LLM Output
+**Vulnerability:** LLM output was being passed directly to `json.loads` without length limits or schema validation. This exposed the application to memory-exhaustion Denial of Service (DoS) from oversized responses and unexpected behavior from "poisoned" JSON structures (e.g., lists instead of objects, or incorrect value types).
+**Learning:** External content from LLMs should be treated as untrusted and potentially malicious. Relying on LLM "compliance" for JSON structure is a security risk.
+**Prevention:** Enforce strict length limits on LLM response strings before parsing. Wrap parsing in explicit `try/except json.JSONDecodeError` blocks. After parsing, explicitly validate the data type (e.g., `isinstance(data, dict)`) and verify each field's type and value against allowlists or expected ranges before use.
