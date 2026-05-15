@@ -1,4 +1,3 @@
-import pytest
 import json
 import os
 import subprocess
@@ -114,6 +113,14 @@ def test_get_swap_quote_error():
         assert estimated_out == 0.0
         assert gas_okb == 0.0001
         assert data is None
+
+def test_get_swap_quote_json_decode_error():
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(stdout="Invalid JSON")
+        estimated_out, gas_okb, data = get_swap_quote("USDC", "ETH", "100", 196)
+        assert estimated_out == 0.0
+        assert gas_okb == 0.0001
+        assert data == "Invalid quote response received from the node."
 
 def test_execute_swap_testnet():
     # chain_id 195 should use mock behavior
